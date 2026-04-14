@@ -3,7 +3,10 @@ node_modules/
 frontend/node_modules/
 frontend/dist/
 frontend/.env.local
-frontend/.env.local.bak
+frontend/.env.local.*
+frontend/.env*.bak
+*.env.local
+*.env.local.*
 outputs/
 *.mp4
 .DS_Store
