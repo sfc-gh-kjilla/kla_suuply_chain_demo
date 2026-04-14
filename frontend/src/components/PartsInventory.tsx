@@ -1,7 +1,6 @@
 import React from 'react';
 import { useTheme } from '../context/ThemeContext';
 import WarehouseIcon from '@mui/icons-material/Warehouse';
-import InventoryIcon from '@mui/icons-material/Inventory';
 import WarningIcon from '@mui/icons-material/Warning';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import TrendingDownIcon from '@mui/icons-material/TrendingDown';
@@ -33,7 +32,7 @@ export const PartsInventory: React.FC<PartsInventoryProps> = ({
 
   const totalStock = warehouses.reduce((sum, w) => sum + w.quantity, 0);
   const totalInTransit = warehouses.reduce((sum, w) => sum + w.inTransit, 0);
-  const lowStockCount = warehouses.filter(w => w.quantity <= w.reorderPoint && w.quantity > 0).length;
+
   const outOfStockCount = warehouses.filter(w => w.quantity === 0).length;
 
   return (

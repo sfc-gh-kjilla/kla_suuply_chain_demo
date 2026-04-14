@@ -52,12 +52,19 @@ export interface FleetMetric {
   CRYSTAL_BATCH_LOT: string;
 }
 
+export interface ToolStep {
+  tool: string;
+  description: string;
+  status: 'pending' | 'running' | 'complete';
+}
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
   toolResults?: ToolResult[];
+  toolSteps?: ToolStep[];
 }
 
 export interface ToolResult {
@@ -102,4 +109,36 @@ export interface ShippingOption {
   TOTAL_COST: number;
   ESTIMATED_DAYS: number;
   SUPPLIER_BATCH_LOT: string;
+  IMPORT_DUTY?: number;
+  TARIFF_RATE?: number;
+  LANDED_COST?: number;
+}
+
+export interface EscalationCase {
+  CASE_ID: string;
+  CASE_TITLE: string;
+  CUSTOMER: string;
+  FAB_SITE: string;
+  SCANNER_ID: string;
+  SEVERITY: 'SEV1' | 'SEV2' | 'SEV3' | 'SEV4';
+  STATUS: 'OPEN' | 'IN_PROGRESS' | 'WAITING_PARTS' | 'WAITING_CUSTOMER' | 'ESCALATED' | 'RESOLVED';
+  ASSIGNED_ENGINEER: string;
+  ENGINEER_LOCATION: string;
+  CREATED_DATE: string;
+  LAST_UPDATED: string;
+  AGE_DAYS: number;
+  SLA_TARGET_HOURS: number;
+  SLA_REMAINING_HOURS: number;
+  PARTS_NEEDED: string[];
+  DESCRIPTION: string;
+  RESOLUTION_NOTES?: string;
+  COMMUNICATION_LOG: CaseCommunication[];
+}
+
+export interface CaseCommunication {
+  TIMESTAMP: string;
+  AUTHOR: string;
+  AUTHOR_ROLE: string;
+  MESSAGE: string;
+  TYPE: 'NOTE' | 'EMAIL' | 'ESCALATION' | 'PARTS_REQUEST' | 'STATUS_UPDATE';
 }

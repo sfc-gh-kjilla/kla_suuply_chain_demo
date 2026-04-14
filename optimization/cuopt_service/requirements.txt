@@ -1,0 +1,6 @@
+cuopt-cu12
+fastapi
+uvicorn
+pydantic
+numpy
+cudf-cu12
