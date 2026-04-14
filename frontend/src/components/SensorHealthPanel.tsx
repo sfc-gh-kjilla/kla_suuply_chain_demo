@@ -16,7 +16,7 @@ export const SensorHealthPanel: React.FC<SensorHealthPanelProps> = ({
   scannerId,
   onMetricClick,
 }) => {
-  const { theme, colors } = useTheme();
+  const { colors } = useTheme();
 
   const sortedReadings = useMemo(() => {
     const scannerReadings = readings.filter(r => r.SCANNER_ID === scannerId);
@@ -64,7 +64,7 @@ export const SensorHealthPanel: React.FC<SensorHealthPanelProps> = ({
     return { left: Math.max(0, left), width: Math.min(100, right) - Math.max(0, left) };
   };
 
-  const hoverBg = theme === 'dark' ? '#161b22' : '#f0f0f0';
+  const hoverBg = colors.bgElevated;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflowY: 'auto', height: '100%' }}>

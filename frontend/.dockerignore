@@ -1,0 +1,7 @@
+node_modules
+dist
+src_backup_v1
+.env*
+*.md
+.git
+.gitignore

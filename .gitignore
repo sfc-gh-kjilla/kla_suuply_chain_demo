@@ -1,0 +1,9 @@
+node_modules/
+.snowflake/
+frontend/node_modules/
+frontend/dist/
+frontend/.env.local
+frontend/.env.local.bak
+outputs/
+*.mp4
+.DS_Store
