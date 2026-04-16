@@ -33,7 +33,7 @@ export const CustomerFleetOverview: React.FC<CustomerFleetOverviewProps> = ({
   const { colors } = useTheme();
 
   return (
-    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', gap: '8px', overflowY: 'auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       {customers.map((customer, idx) => {
         const totalScanners = customer.fabs.reduce((sum, f) => sum + f.scannerCount, 0);
         const totalCritical = customer.fabs.reduce((sum, f) => sum + f.critical, 0);
@@ -46,7 +46,6 @@ export const CustomerFleetOverview: React.FC<CustomerFleetOverviewProps> = ({
               background: colors.bg,
               borderRadius: '8px',
               border: `1px solid ${totalCritical > 0 ? colors.critical : colors.border}`,
-              overflow: 'hidden',
             }}
           >
             <div style={{
