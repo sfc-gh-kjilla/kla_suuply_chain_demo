@@ -50,7 +50,7 @@ export const CustomerFleetOverview: React.FC<CustomerFleetOverviewProps> = ({
           >
             <div style={{
               padding: '8px 12px',
-              background: totalCritical > 0 ? colors.critical + '20' : colors.surface,
+              background: colors.surface,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',

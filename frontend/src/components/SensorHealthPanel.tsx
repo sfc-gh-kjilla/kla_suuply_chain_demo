@@ -115,14 +115,14 @@ export const SensorHealthPanel: React.FC<SensorHealthPanelProps> = ({
                 left: 0,
                 width: `${greenZone.left}%`,
                 height: '100%',
-                background: greenZone.left > 0 ? colors.critical + '15' : 'transparent',
+                background: greenZone.left > 0 ? 'rgba(120,120,120,0.08)' : 'transparent',
               }} />
               <div style={{
                 position: 'absolute',
                 left: `${greenZone.left + greenZone.width}%`,
                 right: 0,
                 height: '100%',
-                background: colors.critical + '15',
+                background: 'rgba(120,120,120,0.08)',
               }} />
               <div style={{
                 position: 'absolute',

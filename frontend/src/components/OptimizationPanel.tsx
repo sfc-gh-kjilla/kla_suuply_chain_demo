@@ -463,7 +463,7 @@ export function OptimizationPanel({ onAskAI }: OptimizationPanelProps) {
 
               {result.unfulfilled.length > 0 && (
                 <div style={{
-                  background: colors.critical + '10', borderRadius: '8px', border: `1px solid ${colors.critical}20`, padding: '10px',
+                  background: 'transparent', borderRadius: '8px', border: `1px solid ${colors.critical}30`, padding: '10px',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', fontWeight: 600, color: colors.critical, marginBottom: '4px' }}>
                     <WarningAmberIcon style={{ fontSize: 14 }} /> Unfulfilled Cases

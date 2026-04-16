@@ -180,7 +180,8 @@ export const PartsInventory: React.FC<PartsInventoryProps> = ({
                 <div style={{
                   marginTop: '6px',
                   padding: '4px 6px',
-                  background: colors.critical + '20',
+                  background: 'transparent',
+                  border: `1px solid ${colors.critical}40`,
                   borderRadius: '4px',
                   fontSize: '9px',
                   color: colors.critical,

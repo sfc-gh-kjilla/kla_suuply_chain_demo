@@ -79,7 +79,8 @@ export const CaseDetailPanel: React.FC<CaseDetailPanelProps> = ({
               fontSize: '10px',
               fontWeight: 700,
               color: getSeverityColor(caseItem.SEVERITY),
-              background: getSeverityColor(caseItem.SEVERITY) + '20',
+              background: 'transparent',
+              border: `1px solid ${getSeverityColor(caseItem.SEVERITY)}50`,
               padding: '2px 6px',
               borderRadius: '4px',
             }}>
@@ -89,7 +90,8 @@ export const CaseDetailPanel: React.FC<CaseDetailPanelProps> = ({
               fontSize: '10px',
               fontWeight: 600,
               color: caseItem.SLA_REMAINING_HOURS < 0 ? colors.critical : colors.success,
-              background: (caseItem.SLA_REMAINING_HOURS < 0 ? colors.critical : colors.success) + '20',
+              background: caseItem.SLA_REMAINING_HOURS < 0 ? 'transparent' : colors.success + '20',
+              border: caseItem.SLA_REMAINING_HOURS < 0 ? `1px solid ${colors.critical}50` : 'none',
               padding: '2px 6px',
               borderRadius: '4px',
             }}>

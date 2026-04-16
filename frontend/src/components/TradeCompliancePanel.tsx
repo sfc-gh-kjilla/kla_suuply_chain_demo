@@ -298,7 +298,7 @@ export function TradeCompliancePanel({ onAskAI, prefillPartId, prefillCustomer, 
               </div>
             </div>
             {slaHours < 0 && (
-              <div style={{ background: colors.critical + '15', border: `1px solid ${colors.critical}40`, borderRadius: '6px', padding: '8px 10px', marginBottom: '10px', fontSize: '11px', color: colors.critical, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ background: 'transparent', border: `1px solid ${colors.critical}40`, borderRadius: '6px', padding: '8px 10px', marginBottom: '10px', fontSize: '11px', color: colors.critical, display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <WarningAmberIcon style={{ fontSize: 16 }} />
                 SLA BREACHED by {Math.abs(slaHours)} hours. Penalty accruing. Expedited shipment recommended.
               </div>
@@ -367,7 +367,8 @@ export function TradeCompliancePanel({ onAskAI, prefillPartId, prefillCustomer, 
         {currentStep === 'result' && complianceResult && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{
-              background: isBlocked ? colors.critical + '10' : isRestricted ? colors.warning + '10' : colors.success + '10',
+                background: isBlocked ? 'transparent' : isRestricted ? colors.warning + '10' : colors.success + '10',
+                      border: isBlocked ? `1px solid ${colors.critical}40` : 'none',
               borderRadius: '8px',
               border: `1px solid ${isBlocked ? colors.critical + '60' : isRestricted ? colors.warning + '60' : colors.success + '60'}`,
               padding: '14px',
@@ -404,7 +405,8 @@ export function TradeCompliancePanel({ onAskAI, prefillPartId, prefillCustomer, 
                     <div style={{ textAlign: 'right' }}>
                       <span style={{
                         fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '3px',
-                        background: complianceResult.entityDetail?.level === 'DENIED' ? colors.critical + '20' : colors.warning + '20',
+                        background: complianceResult.entityDetail?.level === 'DENIED' ? 'transparent' : colors.warning + '20',
+                        border: complianceResult.entityDetail?.level === 'DENIED' ? `1px solid ${colors.critical}50` : 'none',
                         color: complianceResult.entityDetail?.level === 'DENIED' ? colors.critical : colors.warning,
                       }}>
                         {complianceResult.entityDetail?.level}
@@ -427,7 +429,8 @@ export function TradeCompliancePanel({ onAskAI, prefillPartId, prefillCustomer, 
                     <div style={{ textAlign: 'right' }}>
                       <span style={{
                         fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '3px',
-                        background: complianceResult.regionDetail?.type === 'EMBARGO' ? colors.critical + '20' : colors.warning + '20',
+                        background: complianceResult.regionDetail?.type === 'EMBARGO' ? 'transparent' : colors.warning + '20',
+                        border: complianceResult.regionDetail?.type === 'EMBARGO' ? `1px solid ${colors.critical}50` : 'none',
                         color: complianceResult.regionDetail?.type === 'EMBARGO' ? colors.critical : colors.warning,
                       }}>
                         {complianceResult.regionDetail?.type}
@@ -460,7 +463,7 @@ export function TradeCompliancePanel({ onAskAI, prefillPartId, prefillCustomer, 
             </div>
 
             {complianceResult.entityBlocked && complianceResult.entityDetail && (
-              <div style={{ background: colors.critical + '10', borderRadius: '8px', border: `1px solid ${colors.critical}30`, padding: '10px', fontSize: '11px' }}>
+              <div style={{ background: 'transparent', borderRadius: '8px', border: `1px solid ${colors.critical}30`, padding: '10px', fontSize: '11px' }}>
                 <div style={{ fontWeight: 600, color: colors.critical, marginBottom: '4px' }}>Entity List Match Detail</div>
                 <div style={{ color: colors.text }}>{complianceResult.entityDetail.reason}</div>
               </div>
@@ -520,7 +523,8 @@ export function TradeCompliancePanel({ onAskAI, prefillPartId, prefillCustomer, 
               width: '64px',
               height: '64px',
               borderRadius: '50%',
-              background: colors.critical + '20',
+              background: 'transparent',
+              border: `1px solid ${colors.critical}50`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -536,7 +540,7 @@ export function TradeCompliancePanel({ onAskAI, prefillPartId, prefillCustomer, 
             </div>
 
             <div style={{
-              background: colors.critical + '10',
+              background: 'transparent',
               border: `1px solid ${colors.critical}30`,
               borderRadius: '10px',
               padding: '12px 16px',

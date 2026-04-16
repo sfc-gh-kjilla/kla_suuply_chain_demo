@@ -78,7 +78,8 @@ export const EscalationCasesPanel: React.FC<EscalationCasesPanelProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '4px',
-                background: colors.critical + '12',
+                background: 'transparent',
+                border: `1px solid ${colors.critical}40`,
                 padding: '2px 8px',
                 borderRadius: '10px',
               }}>
@@ -98,7 +99,8 @@ export const EscalationCasesPanel: React.FC<EscalationCasesPanelProps> = ({
                 color: colors.critical,
                 fontSize: '10px',
                 fontWeight: 700,
-                background: colors.critical + '12',
+                background: 'transparent',
+                border: `1px solid ${colors.critical}40`,
                 padding: '2px 8px',
                 borderRadius: '10px',
               }}>

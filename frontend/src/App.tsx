@@ -371,9 +371,10 @@ function App() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '4px',
-                  background: colors.critical + '12',
-                  padding: '3px 8px',
-                  borderRadius: '12px',
+                background: 'transparent',
+                border: `1px solid ${colors.critical}40`,
+                padding: '3px 8px',
+                borderRadius: '12px',
                 }}>
                   <span style={{ color: colors.critical, fontWeight: 700, fontFamily: 'monospace' }}>{sev1Count}</span>
                   <span style={{ color: colors.critical, opacity: 0.8 }}>SEV1</span>
@@ -412,7 +413,7 @@ function App() {
           <div style={{
             margin: '0 12px',
             padding: '8px 14px',
-            background: `${colors.critical}14`,
+            background: 'transparent',
             border: `1px solid ${colors.critical}40`,
             borderRadius: '10px',
             display: 'flex',
@@ -425,7 +426,7 @@ function App() {
               width: '28px',
               height: '28px',
               borderRadius: '50%',
-              background: `${colors.critical}22`,
+              background: 'transparent',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -444,7 +445,8 @@ function App() {
                     onClick={() => handleCaseClick(c)}
                     style={{
                       cursor: 'pointer',
-                      background: `${colors.critical}18`,
+                      background: 'transparent',
+                      border: `1px solid ${colors.critical}40`,
                       padding: '1px 6px',
                       borderRadius: '4px',
                       fontFamily: 'monospace',
@@ -453,8 +455,8 @@ function App() {
                       color: colors.critical,
                       transition: 'background 0.15s',
                     }}
-                    onMouseEnter={e => e.currentTarget.style.background = `${colors.critical}30`}
-                    onMouseLeave={e => e.currentTarget.style.background = `${colors.critical}18`}
+                      onMouseEnter={e => e.currentTarget.style.background = colors.pillBg}
+                      onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
                   >
                     {c.CASE_ID} · {c.CUSTOMER} · {Math.abs(c.SLA_REMAINING_HOURS)}h overdue
                   </span>

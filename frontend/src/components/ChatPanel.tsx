@@ -359,7 +359,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ initialMessage }) => {
 
         {error && (
           <div style={{
-            background: colors.critical + '08',
+            background: 'transparent',
             border: `1px solid ${colors.critical}25`,
             borderRadius: '10px',
             padding: '10px 14px',

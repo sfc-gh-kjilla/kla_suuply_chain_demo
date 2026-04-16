@@ -27,12 +27,12 @@ export const KPIBar: React.FC<KPIBarProps> = ({ cases }) => {
   const casesPerEngineer = openCases.length / (uniqueEngineers || 1);
 
   const kpis = [
-    { label: 'Revenue at Risk', value: `$${revenueAtRisk.toFixed(1)}M`, alert: revenueAtRisk > 3, icon: revenueAtRisk > 3 },
-    { label: 'SLA Penalty Exposure', value: `$${Math.round(slaPenaltyExposure / 1000)}K`, alert: breachedCases.length > 0, icon: breachedCases.length > 0 },
-    { label: 'Avg Resolution', value: `${avgResolutionDays.toFixed(1)}d`, alert: false, icon: false },
-    { label: 'Parts Cost MTD', value: `$${Math.round(partsCostMTD / 1000)}K`, alert: false, icon: false },
-    { label: 'Load / Engineer', value: casesPerEngineer.toFixed(1), alert: casesPerEngineer > 2, icon: false },
-    { label: 'Batch B-2024-X', value: '5 / 7', alert: true, icon: true },
+    { label: 'Revenue at Risk', value: `$${revenueAtRisk.toFixed(1)}M`, alert: revenueAtRisk > 3, icon: revenueAtRisk > 3, costValue: revenueAtRisk * 1_000_000 },
+    { label: 'SLA Penalty Exposure', value: `$${Math.round(slaPenaltyExposure / 1000)}K`, alert: breachedCases.length > 0, icon: breachedCases.length > 0, costValue: slaPenaltyExposure },
+    { label: 'Avg Resolution', value: `${avgResolutionDays.toFixed(1)}d`, alert: false, icon: false, costValue: 0 },
+    { label: 'Parts Cost MTD', value: `$${Math.round(partsCostMTD / 1000)}K`, alert: false, icon: false, costValue: partsCostMTD },
+    { label: 'Load / Engineer', value: casesPerEngineer.toFixed(1), alert: casesPerEngineer > 2, icon: false, costValue: 0 },
+    { label: 'Batch B-2024-X', value: '5 / 7', alert: true, icon: true, costValue: 0 },
   ];
 
   return (
@@ -44,12 +44,14 @@ export const KPIBar: React.FC<KPIBarProps> = ({ cases }) => {
       background: colors.bgSecondary,
       flexShrink: 0,
     }}>
-      {kpis.map((kpi, idx) => (
+      {kpis.map((kpi, idx) => {
+        const highCost = kpi.costValue > 65000;
+        return (
         <div key={idx} style={{
           flex: 1,
           padding: '10px 12px',
           borderRadius: '10px',
-          background: kpi.alert ? colors.critical + '08' : colors.surface,
+          background: highCost ? colors.critical + '08' : colors.surface,
           border: `1px solid ${kpi.alert ? colors.critical + '25' : colors.border}`,
           display: 'flex',
           flexDirection: 'column',
@@ -106,7 +108,8 @@ export const KPIBar: React.FC<KPIBarProps> = ({ cases }) => {
             {kpi.label}
           </span>
         </div>
-      ))}
+        );
+      })}
     </div>
   );
 };

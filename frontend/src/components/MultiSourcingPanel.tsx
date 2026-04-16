@@ -279,7 +279,8 @@ export function MultiSourcingPanel({ onAskAI, selectedCase, onProceedToComplianc
                     <span style={{ fontSize: '11px', fontWeight: 600, fontFamily: 'monospace' }}>{sub.subId}</span>
                     <span style={{
                       fontSize: '9px', fontWeight: 600, padding: '1px 5px', borderRadius: '3px',
-                      background: sub.score >= 0.95 ? colors.success + '15' : sub.score >= 0.90 ? colors.warning + '15' : colors.critical + '15',
+                      background: sub.score >= 0.95 ? colors.success + '15' : sub.score >= 0.90 ? colors.warning + '15' : 'transparent',
+                      border: sub.score < 0.90 ? `1px solid ${colors.critical}40` : 'none',
                       color: sub.score >= 0.95 ? colors.success : sub.score >= 0.90 ? colors.warning : colors.critical,
                     }}>
                       {(sub.score * 100).toFixed(0)}% match
