@@ -253,7 +253,7 @@ export const CaseDetailPanel: React.FC<CaseDetailPanelProps> = ({
         gap: '6px',
       }}>
         <button
-          onClick={() => onAskAI?.(`Give me a full status update on case ${caseItem.CASE_ID} for ${caseItem.CUSTOMER} ${caseItem.FAB_SITE}. What's the current status, parts situation, and recommended next steps?`)}
+          onClick={() => onAskAI?.(`Give me a full status update on case ${caseItem.CASE_ID} for ${caseItem.CUSTOMER} ${caseItem.FAB_SITE}. What's the current status, parts situation, and recommended next steps? Also compare landed costs from all warehouses for delivery to ${caseItem.FAB_SITE}.`)}
           style={{
             flex: 1,
             background: colors.accent,
@@ -267,22 +267,6 @@ export const CaseDetailPanel: React.FC<CaseDetailPanelProps> = ({
           }}
         >
           AI Case Summary
-        </button>
-        <button
-          onClick={() => onAskAI?.(`Find parts sourcing options for case ${caseItem.CASE_ID}. Compare landed costs from all warehouses for delivery to ${caseItem.FAB_SITE}`)}
-          style={{
-            flex: 1,
-            background: colors.warning + '20',
-            color: colors.warning,
-            border: `1px solid ${colors.warning}40`,
-            borderRadius: '6px',
-            padding: '8px',
-            fontSize: '11px',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          Source Parts
         </button>
         {onNavigateTab && (
           <button
