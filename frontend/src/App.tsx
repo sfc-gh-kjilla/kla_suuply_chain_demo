@@ -174,6 +174,12 @@ function App() {
     {
       tabs: [
         { id: 'caseDetail', label: 'Case', icon: <AssignmentIcon style={{ fontSize: 14 }} /> },
+        { id: 'multiSource', label: 'Multi-Src', icon: <SourceIcon style={{ fontSize: 14 }} /> },
+        { id: 'compliance', label: 'Comply', icon: <VerifiedUserIcon style={{ fontSize: 14 }} /> },
+      ],
+    },
+    {
+      tabs: [
         { id: 'sensorHealth', label: 'Sensors', icon: <SpeedIcon style={{ fontSize: 14 }} /> },
         { id: 'telemetry', label: 'Telemetry', icon: <SpeedIcon style={{ fontSize: 14 }} /> },
         { id: 'maintenance', label: 'History', icon: <HistoryIcon style={{ fontSize: 14 }} /> },
@@ -189,8 +195,6 @@ function App() {
     {
       tabs: [
         { id: 'optimize', label: 'Optimize', icon: <AutoFixHighIcon style={{ fontSize: 14 }} /> },
-        { id: 'multiSource', label: 'Multi-Src', icon: <SourceIcon style={{ fontSize: 14 }} /> },
-        { id: 'compliance', label: 'Comply', icon: <VerifiedUserIcon style={{ fontSize: 14 }} /> },
         { id: 'aiSearch', label: 'Search', icon: <SearchIcon style={{ fontSize: 14 }} /> },
       ],
     },
