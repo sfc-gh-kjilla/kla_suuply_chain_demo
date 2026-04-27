@@ -496,6 +496,11 @@ function App() {
             minHeight: 0,
             overflow: 'hidden',
           }}>
+            <EscalationCasesPanel
+              cases={filteredCases}
+              onCaseClick={handleCaseClick}
+              onAskAI={triggerChatPrompt}
+            />
             <div style={{
               background: colors.bgSecondary,
               borderRadius: '12px',
@@ -527,11 +532,6 @@ function App() {
                 />
               </div>
             </div>
-            <EscalationCasesPanel
-              cases={filteredCases}
-              onCaseClick={handleCaseClick}
-              onAskAI={triggerChatPrompt}
-            />
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '10px', flex: 1, minHeight: 0 }}>
