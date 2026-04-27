@@ -355,7 +355,7 @@ export function TradeCompliancePanel({ onAskAI, prefillPartId, prefillCustomer, 
               }}>Back</button>
               <button onClick={runComplianceCheck} style={{
                 padding: '8px 20px', borderRadius: '6px', border: 'none',
-                background: colors.critical, color: 'white',
+                background: colors.accent, color: 'white',
                 fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
               }}>
                 <VerifiedUserIcon style={{ fontSize: 14 }} /> Run Compliance Check

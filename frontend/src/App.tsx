@@ -175,7 +175,7 @@ function App() {
       tabs: [
         { id: 'caseDetail', label: 'Case', icon: <AssignmentIcon style={{ fontSize: 14 }} /> },
         { id: 'multiSource', label: 'Multi-Src', icon: <SourceIcon style={{ fontSize: 14 }} /> },
-        { id: 'compliance', label: 'Comply', icon: <VerifiedUserIcon style={{ fontSize: 14 }} /> },
+        { id: 'compliance', label: 'Compliance', icon: <VerifiedUserIcon style={{ fontSize: 14 }} /> },
       ],
     },
     {
