@@ -189,7 +189,9 @@ function App() {
       tabs: [
         { id: 'caseDetail', label: 'Case', icon: <AssignmentIcon style={{ fontSize: 14 }} /> },
         { id: 'multiSource', label: 'Multi-Src', icon: <SourceIcon style={{ fontSize: 14 }} /> },
+        { id: 'optimize', label: 'Optimize', icon: <AutoFixHighIcon style={{ fontSize: 14 }} /> },
         { id: 'compliance', label: 'Compliance', icon: <VerifiedUserIcon style={{ fontSize: 14 }} /> },
+        { id: 'shipping', label: 'Cost', icon: <CompareArrowsIcon style={{ fontSize: 14 }} /> },
       ],
     },
     {
@@ -201,14 +203,12 @@ function App() {
     },
     {
       tabs: [
-        { id: 'shipping', label: 'Source', icon: <CompareArrowsIcon style={{ fontSize: 14 }} /> },
         { id: 'transfer', label: 'Transfer', icon: <SwapHorizIcon style={{ fontSize: 14 }} /> },
         { id: 'inventory', label: 'Inventory', icon: <LocalShippingIcon style={{ fontSize: 14 }} /> },
       ],
     },
     {
       tabs: [
-        { id: 'optimize', label: 'Optimize', icon: <AutoFixHighIcon style={{ fontSize: 14 }} /> },
         { id: 'aiSearch', label: 'Search', icon: <SearchIcon style={{ fontSize: 14 }} /> },
       ],
     },
