@@ -236,7 +236,7 @@ export function MultiSourcingPanel({ onAskAI, selectedCase, onProceedToComplianc
                 background: 'transparent', color: colors.text, fontSize: '11px', fontWeight: 500,
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', alignSelf: 'flex-start',
               }}>
-              <CheckCircleIcon style={{ fontSize: 14 }} /> Proceed to Compliance
+              <CheckCircleIcon style={{ fontSize: 14, color: colors.success }} /> Proceed to Compliance
             </button>
           )}
         </div>
