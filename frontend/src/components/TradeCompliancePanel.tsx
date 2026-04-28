@@ -62,13 +62,14 @@ const TARIFFS: Record<string, { rate: number; freight: number; fta?: string }> =
 
 interface TradeCompliancePanelProps {
   onAskAI?: (prompt: string) => void;
+  onProceedToCost?: () => void;
   prefillPartId?: string;
   prefillCustomer?: string;
   prefillSlaHours?: number;
   selectedCase?: EscalationCase | null;
 }
 
-export function TradeCompliancePanel({ onAskAI, prefillPartId, prefillCustomer, prefillSlaHours, selectedCase }: TradeCompliancePanelProps) {
+export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, prefillCustomer, prefillSlaHours, selectedCase }: TradeCompliancePanelProps) {
   const { colors } = useTheme();
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('part');
   const [selectedPartIdx, setSelectedPartIdx] = useState(0);
@@ -484,6 +485,16 @@ export function TradeCompliancePanel({ onAskAI, prefillPartId, prefillCustomer, 
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
                   }}>
                   Verify with AI
+                </button>
+              )}
+              {onProceedToCost && (
+                <button onClick={onProceedToCost}
+                  style={{
+                    padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.success}60`,
+                    background: colors.success + '10', color: colors.success, fontSize: '11px', fontWeight: 600,
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
+                  }}>
+                  Proceed to Cost →
                 </button>
               )}
             </div>

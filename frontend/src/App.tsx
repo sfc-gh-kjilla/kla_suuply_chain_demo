@@ -756,6 +756,7 @@ function App() {
                 {activeBottomTab === 'compliance' && (
                   <TradeCompliancePanel
                     onAskAI={triggerChatPrompt}
+                    onProceedToCost={() => setActiveBottomTab('shipping')}
                     selectedCase={selectedCase}
                     prefillPartId={compliancePrefill?.partId}
                     prefillCustomer={compliancePrefill?.customer}
