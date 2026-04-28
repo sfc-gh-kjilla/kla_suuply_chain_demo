@@ -483,7 +483,7 @@ export function TradeCompliancePanel({ onAskAI, prefillPartId, prefillCustomer, 
                     background: colors.accent + '10', color: colors.accent, fontSize: '11px', fontWeight: 600,
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
                   }}>
-                  Ask AI About This Result
+                  Verify with AI
                 </button>
               )}
             </div>

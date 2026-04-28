@@ -105,6 +105,13 @@ function getToolStepsForQuery(query: string): ToolStep[] {
       { tool: 'scanner_analyst', description: 'Calculating landed cost options for destination', status: 'pending' },
     ];
   }
+  if (lower.includes('export compliance review') || lower.includes('ear/itar') || lower.includes('penalties for non-compliance') || lower.includes('export control obligations')) {
+    return [
+      { tool: 'trade_compliance', description: 'Querying BIS Entity List and OFAC SDN database', status: 'pending' },
+      { tool: 'trade_compliance', description: 'Checking EAR ECCN classification and license requirements', status: 'pending' },
+      { tool: 'trade_compliance', description: 'Computing revenue exposure and penalty risk', status: 'pending' },
+    ];
+  }
   if (lower.includes('tariff') || lower.includes('fta') || lower.includes('duty') || lower.includes('cost')) {
     return [
       { tool: 'scanner_analyst', description: 'Loading tariff rate tables and FTA agreements', status: 'pending' },
@@ -306,6 +313,157 @@ ${c.timeline.map(([d, t, msg]) => `- ${fmt(d, t)}: ${msg}`).join('\n')}
 
 ### Recommended Next Steps
 ${c.nextSteps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
+    }
+
+    if (lowerMessage.includes('export compliance review') || lowerMessage.includes('ear/itar') || lowerMessage.includes('penalties for non-compliance') || lowerMessage.includes('export control obligations')) {
+      // Parse key fields from the prompt
+      const partIdMatch = userMessage.match(/for ([\w-]+) —/);
+      const partNameMatch = userMessage.match(/— ([^(]+)\(/);
+      const categoryMatch = userMessage.match(/\(([^,)]+),/);
+      const costMatch = userMessage.match(/unit cost \$([\d,]+)/);
+      const destMatch = userMessage.match(/shipping to ([^.]+)\./);
+      const statusMatch = userMessage.match(/Compliance status: ([^.]+)\./);
+      const landedMatch = userMessage.match(/Landed cost exposure: \$([\d,]+)/);
+      const slaMatch = userMessage.match(/SLA: ([^.]+)\./);
+      const entityMatch = userMessage.match(/Entity screening: ([^.]+)\./);
+      const regionMatch = userMessage.match(/Region control: ([^.]+)\./);
+
+      const partId = partIdMatch ? partIdMatch[1] : '994-023';
+      const partName = partNameMatch ? partNameMatch[1].trim() : 'NLO Harmonic Crystal Assembly';
+      const category = categoryMatch ? categoryMatch[1].trim() : 'Optical Components';
+      const unitCost = costMatch ? costMatch[1] : '45,000';
+      const destination = destMatch ? destMatch[1].trim() : 'destination';
+      const status = statusMatch ? statusMatch[1].trim() : 'CLEARED FOR EXPORT';
+      const landedCost = landedMatch ? landedMatch[1] : '51,480';
+      const sla = slaMatch ? slaMatch[1].trim() : 'within SLA';
+      const hasEntityFlag = !!entityMatch;
+      const hasRegionFlag = !!regionMatch;
+      const entityDetail = entityMatch ? entityMatch[1].trim() : '';
+      const regionDetail = regionMatch ? regionMatch[1].trim() : '';
+
+      const isBlocked = status.includes('EXPORT BLOCKED');
+      const isRestricted = status.includes('LICENSE REQUIRED');
+
+      const statusIcon = isBlocked ? '🚫 EXPORT BLOCKED' : isRestricted ? '⚠️ LICENSE REQUIRED' : '✅ CLEARED FOR EXPORT';
+
+      const licenseSection = isBlocked ? `### Export License & Legal Status
+- **Status:** No license can authorize this shipment under current designations
+- **Governing regulation:** EAR Part 744 (Entity List) / OFAC SDN List
+- **Required action:** Halt shipment immediately — do not proceed without legal counsel
+- **BIS/OFAC notification:** May be required depending on circumstances
+- **Recordkeeping:** Document denial and all related communications (5-year retention)` :
+        isRestricted ? `### Export License Requirements
+- **ECCN:** 3B001 — Semiconductor manufacturing equipment (EAR-controlled)
+- **License basis:** EAR Part 742 (National Security) / ITAR Category XV if applicable
+- **License type required:** BIS Item Classification + Commerce License Application (BIS-748P)
+- **Typical processing time:** 4–8 weeks standard; 2–3 weeks expedited
+- **Interim option:** License Exception STA (Strategic Trade Authorization) — check eligibility
+- **DDTC:** If ITAR-classified, submit DSP-5 application to State Dept` :
+        `### Export License Requirements
+- **ECCN:** EAR99 / 3B001 — standard commercial item, no individual license required
+- **License exception:** NLR (No License Required) applies for this destination
+- **Required documentation:** Electronic Export Information (EEI) via AES if shipment value > $2,500
+- **Certificate of origin:** Required for FTA duty preference claim
+- **End-use certificate:** Recommended for semiconductor equipment (retain 5 years)`;
+
+      const entitySection = hasEntityFlag ? `### Entity Screening Result
+- **Finding:** ${entityDetail}
+- **Database:** BIS Entity List / OFAC SDN / Denied Persons List
+- **Implication:** ${isBlocked ? 'No exports, re-exports, or transfers — zero exceptions without BIS authorization' : 'Enhanced due diligence required — obtain end-user statement and legal review before proceeding'}` :
+        `### Entity Screening Result
+- **BIS Entity List:** No match — customer cleared
+- **OFAC SDN List:** No match — no sanctions exposure
+- **Denied Persons List:** No match
+- **End-user risk:** Low — established semiconductor customer with known use case`;
+
+      const regionSection = hasRegionFlag ? `### Regional / Country Controls
+- **Finding:** ${regionDetail}
+- **Implication:** ${isBlocked ? 'Embargo or comprehensive sanctions prohibit this shipment' : 'EAR country-level restrictions apply — license required for this category'}` :
+        `### Regional / Country Controls
+- **Destination assessment:** No embargo, comprehensive sanctions, or country-level EAR restrictions
+- **Dual-use check:** Part category (${category}) is controlled but destination country is cleared for this ECCN
+- **Re-export risk:** Customer should obtain re-export authorization if further transferring the part`;
+
+      const penaltySection = isBlocked ? `### Penalties for Non-Compliance — If Shipment Proceeds
+| Violation Type | Penalty |
+|----------------|---------|
+| Criminal (EAR / IEEPA) | Up to $1,000,000 per violation + up to 20 years imprisonment |
+| Civil (BIS administrative) | Up to $300,000 per violation or 2× transaction value |
+| OFAC civil | Up to $1,078,156 per violation (inflation-adjusted) |
+| Export privilege | Denial of export privileges (company-wide) |
+| Reputational | Public denial order listing — severe customer/partner impact |
+
+> **Note:** Each item in a prohibited shipment counts as a separate violation.` :
+        isRestricted ? `### Penalties for Non-Compliance — Shipping Without License
+| Violation Type | Penalty |
+|----------------|---------|
+| Criminal (EAR) | Up to $250,000 per violation + up to 5 years imprisonment |
+| Civil (BIS) | Up to $300,000 per violation or 2× transaction value |
+| Administrative | Temporary denial order (TDO) — halts all export activity |
+| Contract exposure | Customer SLA penalties cannot be offset against compliance violations |` :
+        `### Compliance Obligations — Cleared Shipment
+| Requirement | Detail |
+|-------------|--------|
+| EEI filing (AES) | Required — value $${unitCost} exceeds $2,500 threshold |
+| Shipper's Export Declaration | Include ECCN and license exception (NLR) |
+| Certificate of Origin | Required for FTA duty preference at destination |
+| End-use recordkeeping | Retain for 5 years per EAR Part 762 |`;
+
+      const revenueSection = `### Revenue & SLA Impact
+- **Shipment value:** $${unitCost} (unit) + logistics = **$${landedCost} landed**
+- **SLA status:** ${sla}
+- **Revenue protected by clearing this shipment:** Resolves escalation case — prevents ongoing SLA penalties${isBlocked ? `
+- **Revenue blocked:** Shipment cannot proceed — escalation case remains open, SLA penalties continue accruing
+- **Alternative:** Work with legal to identify compliant sourcing or end-customer substitution` : isRestricted ? `
+- **Revenue at risk during license application:** 4–8 weeks processing = continued SLA exposure
+- **Mitigation:** Apply immediately; explore License Exception STA to reduce delay
+- **Cost of delay vs. compliance risk:** SLA penalty accrual likely exceeds expedite cost` : `
+- **No compliance-driven revenue risk** — shipment is cleared to proceed immediately`}`;
+
+      return `## Export Compliance Verification — ${partId}
+
+**${statusIcon}**
+**Part:** ${partId} — ${partName} | **Category:** ${category}
+**Destination:** ${destination}
+
+---
+
+${licenseSection}
+
+---
+
+${entitySection}
+
+---
+
+${regionSection}
+
+---
+
+${penaltySection}
+
+---
+
+${revenueSection}
+
+---
+
+### Recommended Actions
+${isBlocked ? `1. **Stop shipment immediately** — notify logistics and field engineer
+2. **Escalate to legal counsel** — document circumstances and any prior due diligence
+3. **File voluntary self-disclosure** with BIS if shipment was partially initiated
+4. **Identify alternative supply path** — can another entity or customer fulfill the service need?
+5. **Update case status** — escalation may need alternative resolution path` :
+isRestricted ? `1. **Submit BIS-748P license application** immediately — start the clock on 4–8 week review
+2. **Check License Exception STA eligibility** — may allow shipment to proceed while license is pending
+3. **Obtain end-user certificate** from ${destination} before shipment
+4. **Notify customer** of potential delay — document communication for SLA dispute mitigation
+5. **Engage KLA legal/trade compliance** for expedited review` :
+`1. **Proceed with shipment** — all compliance checks passed
+2. **File EEI via AES** before export — include ECCN and license exception NLR
+3. **Attach certificate of origin** to commercial invoice for FTA duty preference
+4. **Retain all documentation** for 5 years per EAR Part 762
+5. **Confirm with logistics** that destination customs documentation is complete`}`;
     }
 
     if (lowerMessage.includes('landed cost') || lowerMessage.includes('source parts') || lowerMessage.includes('sourcing') || lowerMessage.includes('find parts')) {
