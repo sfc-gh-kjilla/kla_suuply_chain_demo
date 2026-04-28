@@ -19,6 +19,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import { useTheme } from './context/ThemeContext';
 
 const customerFleetData = [
@@ -81,7 +82,7 @@ function App() {
   );
   const [selectedCustomer, setSelectedCustomer] = useState<string>('All Customers');
   const [customerDropdownOpen, setCustomerDropdownOpen] = useState(false);
-  const [activeBottomTab, setActiveBottomTab] = useState<'caseDetail' | 'sensorHealth' | 'telemetry' | 'maintenance' | 'shipping' | 'transfer' | 'inventory' | 'optimize' | 'multiSource' | 'compliance' | 'aiSearch'>('caseDetail');
+  const [activeBottomTab, setActiveBottomTab] = useState<'caseDetail' | 'sensorHealth' | 'telemetry' | 'maintenance' | 'shipping' | 'transfer' | 'inventory' | 'optimize' | 'multiSource' | 'compliance' | 'aiSearch' | 'resolve'>('caseDetail');
   const [chatPrompt, setChatPrompt] = useState<string | undefined>(undefined);
   const [chatCollapsed, setChatCollapsed] = useState(false);
   const [selectedCase, setSelectedCase] = useState<EscalationCase | null>(null);
@@ -89,17 +90,19 @@ function App() {
   const [showArchitectureOverlay, setShowArchitectureOverlay] = useState(false);
   const [shipmentModalOption, setShipmentModalOption] = useState<ShippingOption | null>(null);
   const [shipmentDone, setShipmentDone] = useState(false);
+  const [confirmedShipment, setConfirmedShipment] = useState<ShippingOption | null>(null);
   const [caseResolved, setCaseResolved] = useState(false);
   const [compliancePrefill, setCompliancePrefill] = useState<{ partId?: string; customer?: string; slaHours?: number } | null>(null);
 
   // Reset shipment/resolve state when the selected case changes
   useEffect(() => {
     setShipmentDone(false);
+    setConfirmedShipment(null);
     setCaseResolved(false);
   }, [selectedCase?.CASE_ID]);
 
   const workflowStep = useMemo(() => {
-    if (caseResolved) return 'resolve';
+    if (caseResolved || activeBottomTab === 'resolve') return 'resolve';
     if (shipmentModalOption || shipmentDone) return 'ship';
     if (activeBottomTab === 'compliance') return 'comply';
     if (activeBottomTab === 'multiSource') return 'source';
@@ -154,8 +157,10 @@ function App() {
   const handleShipmentConfirm = () => {
     if (shipmentModalOption) {
       triggerChatPrompt(`Ship part 994-023 from ${shipmentModalOption.WAREHOUSE_LOCATION} to ${selectedScanner}. Show landed cost breakdown including tariffs and duties.`);
+      setConfirmedShipment(shipmentModalOption);
       setShipmentDone(true);
       setShipmentModalOption(null);
+      setActiveBottomTab('resolve');
     }
   };
 
@@ -202,6 +207,7 @@ function App() {
         { id: 'optimize', label: 'Optimize', icon: <AutoFixHighIcon style={{ fontSize: 14 }} /> },
         { id: 'compliance', label: 'Compliance', icon: <VerifiedUserIcon style={{ fontSize: 14 }} /> },
         { id: 'shipping', label: 'Cost', icon: <CompareArrowsIcon style={{ fontSize: 14 }} /> },
+        ...(shipmentDone ? [{ id: 'resolve', label: 'Resolve', icon: <CheckCircleIcon style={{ fontSize: 14 }} /> }] : []),
       ],
     },
     {
@@ -766,6 +772,102 @@ function App() {
                     selectedCase={selectedCase}
                     onAskAI={triggerChatPrompt}
                   />
+                )}
+                {activeBottomTab === 'resolve' && selectedCase && confirmedShipment && (
+                  <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '14px', height: '100%', overflowY: 'auto' }}>
+                    {/* Header */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <CheckCircleIcon style={{ fontSize: 22, color: colors.success }} />
+                      <div>
+                        <div style={{ fontSize: '14px', fontWeight: 700, color: colors.text }}>Shipment Confirmed — Ready to Resolve</div>
+                        <div style={{ fontSize: '11px', color: colors.textMuted }}>Review the actions taken and close this case.</div>
+                      </div>
+                    </div>
+
+                    {/* Case summary */}
+                    <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: colors.textMuted, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Case Summary</div>
+                      {[
+                        ['Case ID', selectedCase.CASE_ID],
+                        ['Customer', selectedCase.CUSTOMER],
+                        ['Site', selectedCase.FAB_SITE],
+                        ['Severity', selectedCase.SEVERITY],
+                        ['Status', selectedCase.STATUS],
+                        ['Engineer', selectedCase.ASSIGNED_ENGINEER],
+                      ].map(([label, value]) => (
+                        <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                          <span style={{ color: colors.textMuted }}>{label}</span>
+                          <span style={{ fontWeight: 600, color: colors.text }}>{value}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Shipment summary */}
+                    <div style={{ background: colors.surface, border: `1px solid ${colors.success}30`, borderRadius: '8px', padding: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: colors.textMuted, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '4px' }}>Shipment Dispatched</div>
+                      {[
+                        ['Part', '994-023 NLO Crystal Assembly'],
+                        ['From', confirmedShipment.WAREHOUSE_LOCATION],
+                        ['To', selectedCase.FAB_SITE],
+                        ['Method', 'Next Day Air Priority'],
+                        ['Landed Cost', `$${(confirmedShipment.LANDED_COST ?? confirmedShipment.TOTAL_COST).toLocaleString(undefined, { maximumFractionDigits: 0 })}`],
+                        ['ETA', `${confirmedShipment.ESTIMATED_DAYS} day${confirmedShipment.ESTIMATED_DAYS !== 1 ? 's' : ''}`],
+                      ].map(([label, value]) => (
+                        <div key={label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                          <span style={{ color: colors.textMuted }}>{label}</span>
+                          <span style={{ fontWeight: 600, color: colors.text }}>{value}</span>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Steps completed */}
+                    <div style={{ background: colors.surface, border: `1px solid ${colors.border}`, borderRadius: '8px', padding: '12px' }}>
+                      <div style={{ fontSize: '11px', fontWeight: 700, color: colors.textMuted, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '8px' }}>Workflow Steps Completed</div>
+                      {[
+                        'Case opened and assigned to field engineer',
+                        'Parts inventory checked across all warehouses',
+                        'Multi-source analysis run — best warehouse identified',
+                        'Optimization model confirmed allocation',
+                        'Export compliance check passed',
+                        'Landed cost comparison completed',
+                        'Shipment order executed',
+                      ].map((step, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px', fontSize: '12px', color: colors.text }}>
+                          <CheckCircleIcon style={{ fontSize: 14, color: colors.success, marginTop: '1px', flexShrink: 0 }} />
+                          {step}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Resolve button */}
+                    <button
+                      onClick={() => {
+                        setCaseResolved(true);
+                        setSelectedCase(null);
+                      }}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        background: colors.success,
+                        color: '#fff',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      <CheckCircleIcon style={{ fontSize: 18 }} />
+                      Resolve Case
+                    </button>
+                    <div style={{ fontSize: '10px', color: colors.textMuted, textAlign: 'center' }}>
+                      Removes this case from the active view. Refresh the page to restore all cases.
+                    </div>
+                  </div>
                 )}
               </div>
             </div>
