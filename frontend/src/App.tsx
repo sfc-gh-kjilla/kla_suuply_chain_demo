@@ -17,6 +17,8 @@ import SourceIcon from '@mui/icons-material/Source';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
 import SearchIcon from '@mui/icons-material/Search';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { useTheme } from './context/ThemeContext';
 
 const customerFleetData = [
@@ -81,6 +83,7 @@ function App() {
   const [customerDropdownOpen, setCustomerDropdownOpen] = useState(false);
   const [activeBottomTab, setActiveBottomTab] = useState<'caseDetail' | 'sensorHealth' | 'telemetry' | 'maintenance' | 'shipping' | 'transfer' | 'inventory' | 'optimize' | 'multiSource' | 'compliance' | 'aiSearch'>('caseDetail');
   const [chatPrompt, setChatPrompt] = useState<string | undefined>(undefined);
+  const [chatCollapsed, setChatCollapsed] = useState(false);
   const [selectedCase, setSelectedCase] = useState<EscalationCase | null>(null);
   const [showSAPPanel, setShowSAPPanel] = useState(false);
   const [showArchitectureOverlay, setShowArchitectureOverlay] = useState(false);
@@ -748,12 +751,78 @@ function App() {
       </div>
 
       <div style={{
-        width: '380px',
+        width: chatCollapsed ? '40px' : '380px',
+        flexShrink: 0,
+        transition: 'width 0.25s ease',
         borderLeft: `1px solid ${colors.border}`,
         background: colors.bgSecondary,
         boxShadow: theme === 'light' ? '-2px 0 8px rgba(0,0,0,0.03)' : 'none',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
       }}>
-        <ChatPanel initialMessage={chatPrompt} />
+        {/* Toggle strip */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '8px 4px',
+          borderBottom: chatCollapsed ? 'none' : `1px solid ${colors.border}`,
+          flexShrink: 0,
+        }}>
+          <button
+            onClick={() => setChatCollapsed(!chatCollapsed)}
+            title={chatCollapsed ? 'Expand AI Chat' : 'Collapse AI Chat'}
+            style={{
+              background: 'transparent',
+              border: `1px solid ${colors.border}`,
+              borderRadius: '6px',
+              padding: '4px 6px',
+              cursor: 'pointer',
+              color: colors.accent,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            {chatCollapsed
+              ? <ChevronLeftIcon style={{ fontSize: 16 }} />
+              : <ChevronRightIcon style={{ fontSize: 16 }} />}
+          </button>
+        </div>
+
+        {/* Collapsed label */}
+        {chatCollapsed && (
+          <div style={{
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            overflow: 'hidden',
+          }}>
+            <span style={{
+              transform: 'rotate(-90deg)',
+              fontSize: '10px',
+              fontWeight: 700,
+              letterSpacing: '2px',
+              color: colors.accent,
+              whiteSpace: 'nowrap',
+              userSelect: 'none',
+            }}>
+              AI CHAT
+            </span>
+          </div>
+        )}
+
+        {/* ChatPanel — always mounted to preserve message state */}
+        <div style={{
+          flex: 1,
+          overflow: 'hidden',
+          display: chatCollapsed ? 'none' : 'flex',
+          flexDirection: 'column',
+        }}>
+          <ChatPanel initialMessage={chatPrompt} />
+        </div>
       </div>
 
       {shipmentModalOption && (
