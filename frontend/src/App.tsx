@@ -164,6 +164,16 @@ function App() {
     return mockEscalationCases.filter(c => c.CUSTOMER === selectedCustomer);
   }, [selectedCustomer]);
 
+  const highlightedFab = useMemo(() => {
+    if (!selectedCase) return null;
+    const customerData = customerFleetData.find(c => c.name === selectedCase.CUSTOMER);
+    if (!customerData) return null;
+    const match = customerData.fabs.find(f =>
+      selectedCase.FAB_SITE.toLowerCase().includes(f.fabName.toLowerCase())
+    );
+    return match ? { customer: selectedCase.CUSTOMER, fabName: match.fabName } : null;
+  }, [selectedCase]);
+
   const openCases = filteredCases.filter(c => c.STATUS !== 'RESOLVED');
   const sev1Count = openCases.filter(c => c.SEVERITY === 'SEV1').length;
   const breachedCases = openCases.filter(c => c.SLA_REMAINING_HOURS < 0);
@@ -529,6 +539,7 @@ function App() {
               <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
                 <CustomerFleetOverview
                   customers={filteredCustomerData}
+                  highlightedFab={highlightedFab}
                   onFabClick={(customer, fab) => {
                     triggerChatPrompt(`Show escalation cases and scanner status for ${customer} ${fab}`);
                   }}

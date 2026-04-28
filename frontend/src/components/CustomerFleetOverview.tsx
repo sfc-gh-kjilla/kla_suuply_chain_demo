@@ -24,11 +24,13 @@ interface Customer {
 interface CustomerFleetOverviewProps {
   customers: Customer[];
   onFabClick?: (customer: string, fab: string) => void;
+  highlightedFab?: { customer: string; fabName: string } | null;
 }
 
 export const CustomerFleetOverview: React.FC<CustomerFleetOverviewProps> = ({
   customers,
   onFabClick,
+  highlightedFab,
 }) => {
   const { colors } = useTheme();
 
@@ -80,17 +82,22 @@ export const CustomerFleetOverview: React.FC<CustomerFleetOverviewProps> = ({
             </div>
             
             <div style={{ padding: '8px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              {customer.fabs.map((fab, fabIdx) => (
+              {customer.fabs.map((fab, fabIdx) => {
+                const isHighlighted = highlightedFab?.customer === customer.name && highlightedFab?.fabName === fab.fabName;
+                return (
                 <div
                   key={fabIdx}
                   onClick={() => onFabClick?.(customer.name, fab.fabName)}
                   style={{
-                    background: colors.surface,
+                    background: isHighlighted ? colors.accent + '15' : colors.surface,
                     borderRadius: '6px',
                     padding: '6px 10px',
                     fontSize: '11px',
                     cursor: 'pointer',
-                    border: `1px solid ${fab.critical > 0 ? colors.critical : fab.warning > 0 ? colors.warning : colors.border}`,
+                    border: isHighlighted
+                      ? `2px solid ${colors.accent}`
+                      : `1px solid ${fab.critical > 0 ? colors.critical : fab.warning > 0 ? colors.warning : colors.border}`,
+                    boxShadow: isHighlighted ? `0 0 0 3px ${colors.accent}30` : 'none',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
@@ -119,7 +126,8 @@ export const CustomerFleetOverview: React.FC<CustomerFleetOverviewProps> = ({
                     {fab.scannerCount}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
