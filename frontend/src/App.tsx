@@ -92,6 +92,12 @@ function App() {
   const [shipmentDone, setShipmentDone] = useState(false);
   const [confirmedShipment, setConfirmedShipment] = useState<ShippingOption | null>(null);
   const [caseResolved, setCaseResolved] = useState(false);
+  const [resolvedCaseIds, setResolvedCaseIds] = useState<Set<string>>(() => {
+    try {
+      const stored = sessionStorage.getItem('kla_resolvedCaseIds');
+      return stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
+    } catch { return new Set<string>(); }
+  });
   const [compliancePrefill, setCompliancePrefill] = useState<{ partId?: string; customer?: string; slaHours?: number } | null>(null);
 
   // Reset shipment/resolve state when the selected case changes
@@ -118,7 +124,7 @@ function App() {
     setAlerts(mockAlerts);
     setTelemetry(mockTelemetryData);
     setMaintenanceLogs(mockMaintenanceLogs);
-    setSelectedCase(mockEscalationCases.find(c => c.SEVERITY === 'SEV1') || null);
+    setSelectedCase(mockEscalationCases.find(c => c.SEVERITY === 'SEV1' && !resolvedCaseIds.has(c.CASE_ID)) || null);
   }, []);
 
   const sensorReadings = useMemo<SensorReading[]>(() => {
@@ -168,12 +174,26 @@ function App() {
     setActiveBottomTab('optimize');
   };
 
+  const handleResolveCase = (caseId: string) => {
+    const updated = new Set(resolvedCaseIds);
+    updated.add(caseId);
+    setResolvedCaseIds(updated);
+    try { sessionStorage.setItem('kla_resolvedCaseIds', JSON.stringify([...updated])); } catch { /* ignore */ }
+    setCaseResolved(true);
+    setSelectedCase(null);
+  };
+
+  const activeCases = useMemo(
+    () => mockEscalationCases.filter(c => !resolvedCaseIds.has(c.CASE_ID)),
+    [resolvedCaseIds]
+  );
+
   const selectedScannerData = mockScanners.find(s => s.SCANNER_ID === selectedScanner);
 
   const filteredCases = useMemo(() => {
-    if (selectedCustomer === 'All Customers') return mockEscalationCases;
-    return mockEscalationCases.filter(c => c.CUSTOMER === selectedCustomer);
-  }, [selectedCustomer]);
+    if (selectedCustomer === 'All Customers') return activeCases;
+    return activeCases.filter(c => c.CUSTOMER === selectedCustomer);
+  }, [selectedCustomer, activeCases]);
 
   const highlightedFab = useMemo(() => {
     if (!selectedCase) return null;
@@ -652,7 +672,7 @@ function App() {
                       onClose={() => setSelectedCase(null)}
                       onAskAI={triggerChatPrompt}
                       onNavigateTab={(tab) => setActiveBottomTab(tab as typeof activeBottomTab)}
-                      onResolve={() => setCaseResolved(true)}
+                      onResolve={() => selectedCase && handleResolveCase(selectedCase.CASE_ID)}
                     />
                   ) : (
                     <div style={{
@@ -837,10 +857,7 @@ function App() {
 
                     {/* Resolve button */}
                     <button
-                      onClick={() => {
-                        setCaseResolved(true);
-                        setSelectedCase(null);
-                      }}
+                      onClick={() => selectedCase && handleResolveCase(selectedCase.CASE_ID)}
                       style={{
                         width: '100%',
                         padding: '12px',
@@ -861,7 +878,7 @@ function App() {
                       Resolve Case
                     </button>
                     <div style={{ fontSize: '10px', color: colors.textMuted, textAlign: 'center' }}>
-                      Removes this case from the active view. Refresh the page to restore all cases.
+                      Removes this case for the current session. Close and reopen the browser tab to restore all cases.
                     </div>
                   </div>
                 )}
