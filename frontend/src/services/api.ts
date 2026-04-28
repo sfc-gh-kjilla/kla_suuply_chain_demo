@@ -118,51 +118,47 @@ export function getShippingOptions(destinationCountry: string): ShippingOption[]
     { WAREHOUSE_LOCATION: 'KLA Dresden Hub', WAREHOUSE_CITY: 'Dresden', WAREHOUSE_STATE: 'DE', QUANTITY_AVAILABLE: 1, UNIT_COST: 45000, SUPPLIER_BATCH_LOT: 'B-2024-A' },
   ];
 
-  const shippingRates: Record<string, Record<string, { cost: number; days: number }>> = {
-    'South Korea': { 'AZ': { cost: 4500, days: 2 }, 'CA': { cost: 4200, days: 2 }, 'SG': { cost: 1800, days: 1 }, 'DE': { cost: 3500, days: 3 } },
-    'Japan': { 'AZ': { cost: 4200, days: 2 }, 'CA': { cost: 4000, days: 2 }, 'SG': { cost: 1600, days: 1 }, 'DE': { cost: 3800, days: 3 } },
-    'Taiwan': { 'AZ': { cost: 4000, days: 2 }, 'CA': { cost: 3800, days: 2 }, 'SG': { cost: 1200, days: 1 }, 'DE': { cost: 3600, days: 3 } },
-    'USA': { 'AZ': { cost: 500, days: 1 }, 'CA': { cost: 600, days: 1 }, 'SG': { cost: 4500, days: 3 }, 'DE': { cost: 4000, days: 3 } },
-    'Belgium': { 'AZ': { cost: 4000, days: 3 }, 'CA': { cost: 4200, days: 3 }, 'SG': { cost: 3500, days: 2 }, 'DE': { cost: 800, days: 1 } },
-    'Singapore': { 'AZ': { cost: 4500, days: 3 }, 'CA': { cost: 4200, days: 3 }, 'SG': { cost: 0, days: 0 }, 'DE': { cost: 3500, days: 2 } },
+  // Maps warehouse state codes to origin country codes (same as OptimizationPanel)
+  const originCodeMap: Record<string, string> = { 'AZ': 'USA', 'CA': 'USA', 'SG': 'SGP', 'DE': 'DEU' };
+  // Maps scanner FAB_COUNTRY to dest codes
+  const destCodeMap: Record<string, string> = {
+    'South Korea': 'KOR', 'Japan': 'JPN', 'Taiwan': 'TWN', 'USA': 'USA', 'Belgium': 'BEL',
   };
 
-  const taxRates: Record<string, number> = {
-    'South Korea': 0.10,
-    'Japan': 0.10,
-    'Taiwan': 0.05,
-    'USA': 0.08,
-    'Belgium': 0.21,
-    'Singapore': 0.09,
+  // Unified tariff table — identical to OptimizationPanel TARIFFS so both tabs agree
+  const TARIFFS: Record<string, { rate: number; freight: number; days: number }> = {
+    'USA-KOR': { rate: 0.08,  freight: 4500, days: 2 },
+    'SGP-KOR': { rate: 0.00,  freight: 1800, days: 1 },
+    'DEU-KOR': { rate: 0.032, freight: 3200, days: 2 },
+    'USA-JPN': { rate: 0.05,  freight: 4200, days: 2 },
+    'SGP-JPN': { rate: 0.00,  freight: 2100, days: 1 },
+    'DEU-JPN': { rate: 0.038, freight: 3400, days: 2 },
+    'USA-TWN': { rate: 0.06,  freight: 4800, days: 2 },
+    'SGP-TWN': { rate: 0.00,  freight: 1900, days: 1 },
+    'DEU-TWN': { rate: 0.035, freight: 3500, days: 2 },
+    'USA-USA': { rate: 0.00,  freight:  400, days: 1 },
+    'USA-BEL': { rate: 0.05,  freight: 4000, days: 3 },
+    'SGP-BEL': { rate: 0.02,  freight: 3500, days: 2 },
+    'DEU-BEL': { rate: 0.00,  freight:  800, days: 1 },
   };
 
-  const tariffRates: Record<string, Record<string, number>> = {
-    'South Korea': { 'AZ': 0.08, 'CA': 0.08, 'SG': 0.0, 'DE': 0.04 },
-    'Japan': { 'AZ': 0.06, 'CA': 0.06, 'SG': 0.0, 'DE': 0.04 },
-    'Taiwan': { 'AZ': 0.07, 'CA': 0.07, 'SG': 0.0, 'DE': 0.035 },
-    'USA': { 'AZ': 0.0, 'CA': 0.0, 'SG': 0.0, 'DE': 0.04 },
-    'Belgium': { 'AZ': 0.05, 'CA': 0.05, 'SG': 0.02, 'DE': 0.0 },
-    'Singapore': { 'AZ': 0.0, 'CA': 0.0, 'SG': 0.0, 'DE': 0.02 },
-  };
-
-  const rates = shippingRates[destinationCountry] || shippingRates['USA'];
-  const taxRate = taxRates[destinationCountry] || 0.08;
-  const tariffs = tariffRates[destinationCountry] || {};
+  const VAT = 0.10;
+  const destCode = destCodeMap[destinationCountry] || 'KOR';
 
   return baseOptions.map(opt => {
-    const shipping = rates[opt.WAREHOUSE_STATE] || { cost: 3000, days: 3 };
-    const tariffRate = tariffs[opt.WAREHOUSE_STATE] || 0.05;
-    const importDuty = Math.round(opt.UNIT_COST * tariffRate);
-    const subtotal = opt.UNIT_COST + shipping.cost + importDuty;
-    const taxAmount = Math.round(subtotal * taxRate);
-    const landedCost = subtotal + taxAmount;
+    const originCode = originCodeMap[opt.WAREHOUSE_STATE] || 'USA';
+    const t = TARIFFS[`${originCode}-${destCode}`] || { rate: 0.05, freight: 5000, days: 3 };
+    const importDuty = Math.round(opt.UNIT_COST * t.rate);
+    // VAT applied to unit + duty only (not freight), matching OptimizationPanel formula
+    const taxAmount = Math.round((opt.UNIT_COST + importDuty) * VAT);
+    const landedCost = opt.UNIT_COST + t.freight + importDuty + taxAmount;
     return {
       ...opt,
-      SHIPPING_COST: shipping.cost,
-      ESTIMATED_DAYS: shipping.days,
-      TAX_RATE: taxRate,
+      SHIPPING_COST: t.freight,
+      ESTIMATED_DAYS: t.days,
+      TAX_RATE: VAT,
       TAX_AMOUNT: taxAmount,
-      TARIFF_RATE: tariffRate,
+      TARIFF_RATE: t.rate,
       IMPORT_DUTY: importDuty,
       LANDED_COST: landedCost,
       TOTAL_COST: landedCost,
