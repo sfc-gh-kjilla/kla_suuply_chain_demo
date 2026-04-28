@@ -188,9 +188,10 @@ function solveGreedy(params: OptParams): OptResult {
 
 interface OptimizationPanelProps {
   onAskAI?: (prompt: string) => void;
+  onProceedToCompliance?: () => void;
 }
 
-export function OptimizationPanel({ onAskAI }: OptimizationPanelProps) {
+export function OptimizationPanel({ onAskAI, onProceedToCompliance }: OptimizationPanelProps) {
   const { colors } = useTheme();
   const [params, setParams] = useState<OptParams>({
     sev1Penalty: 50000, sev2Penalty: 25000, sev3Penalty: 10000,
@@ -504,14 +505,14 @@ export function OptimizationPanel({ onAskAI }: OptimizationPanelProps) {
               }}>
                 <CheckCircleIcon style={{ fontSize: 14, color: colors.success }} />
                 <span style={{ color: colors.textMuted }}>Solver: PuLP CBC (CPU) | Status: {result.status}</span>
-                {onAskAI && (
-                  <button onClick={() => onAskAI(`Analyze this optimization result: ${result.assignments.length} cases fulfilled at $${result.totalCost.toLocaleString()} total cost, ${result.slaCoverage}% SLA coverage. Suggest improvements.`)}
+                {onProceedToCompliance && (
+                  <button onClick={onProceedToCompliance}
                     style={{
-                      marginLeft: 'auto', background: 'transparent', color: colors.accent,
-                      border: `1px solid ${colors.border}`, borderRadius: '4px', padding: '3px 8px', fontSize: '10px',
-                      cursor: 'pointer', fontWeight: 500,
+                      marginLeft: 'auto', background: 'transparent', color: colors.success,
+                      border: `1px solid ${colors.success}60`, borderRadius: '4px', padding: '3px 8px', fontSize: '10px',
+                      cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px',
                     }}>
-                    Ask AI to Analyze
+                    Proceed to Compliance →
                   </button>
                 )}
               </div>

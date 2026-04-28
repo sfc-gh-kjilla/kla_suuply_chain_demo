@@ -744,7 +744,7 @@ function App() {
                   />
                 )}
                 {activeBottomTab === 'optimize' && (
-                  <OptimizationPanel onAskAI={triggerChatPrompt} />
+                  <OptimizationPanel onAskAI={triggerChatPrompt} onProceedToCompliance={() => setActiveBottomTab('compliance')} />
                 )}
                 {activeBottomTab === 'multiSource' && (
                   <MultiSourcingPanel
