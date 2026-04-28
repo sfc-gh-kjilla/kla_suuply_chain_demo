@@ -14,6 +14,7 @@ interface CaseDetailPanelProps {
   onClose: () => void;
   onAskAI?: (prompt: string) => void;
   onNavigateTab?: (tab: string) => void;
+  onResolve?: () => void;
 }
 
 export const CaseDetailPanel: React.FC<CaseDetailPanelProps> = ({
@@ -21,6 +22,7 @@ export const CaseDetailPanel: React.FC<CaseDetailPanelProps> = ({
   onClose,
   onAskAI,
   onNavigateTab,
+  onResolve,
 }) => {
   const { colors } = useTheme();
 
@@ -284,6 +286,24 @@ export const CaseDetailPanel: React.FC<CaseDetailPanelProps> = ({
             }}
           >
             Multi-Source &rarr;
+          </button>
+        )}
+        {onResolve && (
+          <button
+            onClick={onResolve}
+            style={{
+              flex: 1,
+              background: colors.success + '15',
+              color: colors.success,
+              border: `1px solid ${colors.success}40`,
+              borderRadius: '6px',
+              padding: '8px',
+              fontSize: '11px',
+              fontWeight: 600,
+              cursor: 'pointer',
+            }}
+          >
+            Mark Resolved
           </button>
         )}
       </div>

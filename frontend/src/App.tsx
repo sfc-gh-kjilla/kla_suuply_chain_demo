@@ -88,10 +88,19 @@ function App() {
   const [showSAPPanel, setShowSAPPanel] = useState(false);
   const [showArchitectureOverlay, setShowArchitectureOverlay] = useState(false);
   const [shipmentModalOption, setShipmentModalOption] = useState<ShippingOption | null>(null);
+  const [shipmentDone, setShipmentDone] = useState(false);
+  const [caseResolved, setCaseResolved] = useState(false);
   const [compliancePrefill, setCompliancePrefill] = useState<{ partId?: string; customer?: string; slaHours?: number } | null>(null);
 
+  // Reset shipment/resolve state when the selected case changes
+  useEffect(() => {
+    setShipmentDone(false);
+    setCaseResolved(false);
+  }, [selectedCase?.CASE_ID]);
+
   const workflowStep = useMemo(() => {
-    if (shipmentModalOption) return 'ship';
+    if (caseResolved) return 'resolve';
+    if (shipmentModalOption || shipmentDone) return 'ship';
     if (activeBottomTab === 'compliance') return 'comply';
     if (activeBottomTab === 'multiSource') return 'source';
     if (activeBottomTab === 'optimize') return 'optimize';
@@ -99,7 +108,7 @@ function App() {
     if (activeBottomTab === 'inventory' || activeBottomTab === 'transfer') return 'parts';
     if (selectedCase) return 'case';
     return 'detect';
-  }, [activeBottomTab, selectedCase, shipmentModalOption]);
+  }, [activeBottomTab, selectedCase, shipmentModalOption, shipmentDone, caseResolved]);
 
   useEffect(() => {
     setFleetMetrics(mockFleetMetrics);
@@ -145,6 +154,7 @@ function App() {
   const handleShipmentConfirm = () => {
     if (shipmentModalOption) {
       triggerChatPrompt(`Ship part 994-023 from ${shipmentModalOption.WAREHOUSE_LOCATION} to ${selectedScanner}. Show landed cost breakdown including tariffs and duties.`);
+      setShipmentDone(true);
       setShipmentModalOption(null);
     }
   };
@@ -641,6 +651,7 @@ function App() {
                       onClose={() => setSelectedCase(null)}
                       onAskAI={triggerChatPrompt}
                       onNavigateTab={(tab) => setActiveBottomTab(tab as typeof activeBottomTab)}
+                      onResolve={() => setCaseResolved(true)}
                     />
                   ) : (
                     <div style={{
