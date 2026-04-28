@@ -135,25 +135,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ initialMessage }) => {
         row.split('|').filter((c: string) => c.trim())
       );
 
-      return `
-        <table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:12px;border-radius:8px;overflow:hidden;">
-          <thead>
-            <tr style="background:${tableHeaderBg};">
-              ${headers.map((h: string) => `<th style="padding:8px;border:1px solid ${tableBorder};text-align:left;">${h.trim()}</th>`).join('')}
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map((row: string[]) => `
-              <tr style="background:${tableRowBg};">
-                ${row.map((cell: string) => `<td style="padding:8px;border:1px solid ${tableBorder};">${cell.trim()}</td>`).join('')}
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-      `;
+    return `<table style="width:100%;border-collapse:collapse;margin:12px 0;font-size:12px;border-radius:8px;overflow:hidden;"><thead><tr style="background:${tableHeaderBg};">${headers.map((h: string) => `<th style="padding:8px;border:1px solid ${tableBorder};text-align:left;">${h.trim()}</th>`).join('')}</tr></thead><tbody>${rows.map((row: string[]) => `<tr style="background:${tableRowBg};">${row.map((cell: string) => `<td style="padding:8px;border:1px solid ${tableBorder};">${cell.trim()}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
     });
 
-    return formatted.replace(/\n/g, '<br/>');
+    return formatted.replace(/\n{2,}/g, '\n').replace(/\n/g, '<br/>');
   };
 
   const suggestedQueries = [
