@@ -162,7 +162,6 @@ function App() {
 
   const handleShipmentConfirm = () => {
     if (shipmentModalOption) {
-      triggerChatPrompt(`Ship part 994-023 from ${shipmentModalOption.WAREHOUSE_LOCATION} to ${selectedScanner}. Show landed cost breakdown including tariffs and duties.`);
       setConfirmedShipment(shipmentModalOption);
       setShipmentDone(true);
       setShipmentModalOption(null);
@@ -404,6 +403,20 @@ function App() {
             <div style={{ width: '1px', height: '20px', background: colors.divider, margin: '0 2px' }} />
 
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', fontSize: '10px' }}>
+              {sev1Count > 0 && (
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                  background: 'transparent',
+                  border: `1px solid ${colors.critical}40`,
+                  padding: '3px 8px',
+                  borderRadius: '12px',
+                }}>
+                  <span style={{ color: colors.critical, fontWeight: 700, fontFamily: 'monospace' }}>{sev1Count}</span>
+                  <span style={{ color: colors.critical, opacity: 0.8 }}>SEV1</span>
+                </div>
+              )}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -415,20 +428,6 @@ function App() {
                 <span style={{ color: colors.teal, fontWeight: 700, fontFamily: 'monospace' }}>{openCases.length}</span>
                 <span style={{ color: colors.textMuted }}>open</span>
               </div>
-              {sev1Count > 0 && (
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                background: 'transparent',
-                border: `1px solid ${colors.critical}40`,
-                padding: '3px 8px',
-                borderRadius: '12px',
-                }}>
-                  <span style={{ color: colors.critical, fontWeight: 700, fontFamily: 'monospace' }}>{sev1Count}</span>
-                  <span style={{ color: colors.critical, opacity: 0.8 }}>SEV1</span>
-                </div>
-              )}
             </div>
 
             <button
