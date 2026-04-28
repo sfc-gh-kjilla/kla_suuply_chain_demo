@@ -120,6 +120,7 @@ function App() {
   }, [selectedCustomer]);
 
   const triggerChatPrompt = (prompt: string) => {
+    setChatCollapsed(false);
     setChatPrompt(`${prompt} [${Date.now()}]`);
   };
 
