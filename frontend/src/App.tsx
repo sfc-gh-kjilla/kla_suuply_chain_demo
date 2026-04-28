@@ -84,7 +84,7 @@ function App() {
   const [customerDropdownOpen, setCustomerDropdownOpen] = useState(false);
   const [activeBottomTab, setActiveBottomTab] = useState<'caseDetail' | 'sensorHealth' | 'telemetry' | 'maintenance' | 'shipping' | 'transfer' | 'inventory' | 'optimize' | 'multiSource' | 'compliance' | 'aiSearch' | 'resolve'>('caseDetail');
   const [chatPrompt, setChatPrompt] = useState<string | undefined>(undefined);
-  const [chatCollapsed, setChatCollapsed] = useState(false);
+  const [chatCollapsed, setChatCollapsed] = useState(true);
   const [selectedCase, setSelectedCase] = useState<EscalationCase | null>(null);
   const [showSAPPanel, setShowSAPPanel] = useState(false);
   const [showArchitectureOverlay, setShowArchitectureOverlay] = useState(false);
