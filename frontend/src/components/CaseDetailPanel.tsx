@@ -285,7 +285,7 @@ export const CaseDetailPanel: React.FC<CaseDetailPanelProps> = ({
               cursor: 'pointer',
             }}
           >
-            Multi-Source &rarr;
+                Source &rarr;
           </button>
         )}
         {onResolve && (

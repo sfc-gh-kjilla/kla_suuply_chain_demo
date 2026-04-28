@@ -494,7 +494,7 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
                     background: colors.success + '10', color: colors.success, fontSize: '11px', fontWeight: 600,
                     cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px',
                   }}>
-                  Proceed to Cost →
+                  Next: Review Shipment →
                 </button>
               )}
             </div>

@@ -15,8 +15,8 @@ export const WorkflowStrip: React.FC<WorkflowStripProps> = ({ activeStep }) => {
     { id: 'parts', label: 'Parts' },
     { id: 'source', label: 'Source' },
     { id: 'optimize', label: 'Optimize' },
-    { id: 'comply', label: 'Comply' },
-    { id: 'cost', label: 'Cost' },
+    { id: 'comply', label: 'Compliance' },
+    { id: 'cost', label: 'Shipment' },
     { id: 'ship', label: 'Ship' },
     { id: 'resolve', label: 'Resolve' },
   ];

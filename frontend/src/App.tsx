@@ -217,10 +217,10 @@ function App() {
     {
       tabs: [
         { id: 'caseDetail', label: 'Case', icon: <AssignmentIcon style={{ fontSize: 14 }} /> },
-        { id: 'multiSource', label: 'Multi-Src', icon: <SourceIcon style={{ fontSize: 14 }} /> },
+        { id: 'multiSource', label: 'Source', icon: <SourceIcon style={{ fontSize: 14 }} /> },
         { id: 'optimize', label: 'Optimize', icon: <AutoFixHighIcon style={{ fontSize: 14 }} /> },
         { id: 'compliance', label: 'Compliance', icon: <VerifiedUserIcon style={{ fontSize: 14 }} /> },
-        { id: 'shipping', label: 'Cost', icon: <CompareArrowsIcon style={{ fontSize: 14 }} /> },
+        { id: 'shipping', label: 'Shipment', icon: <CompareArrowsIcon style={{ fontSize: 14 }} /> },
         ...(shipmentDone ? [{ id: 'resolve', label: 'Resolve', icon: <CheckCircleIcon style={{ fontSize: 14 }} /> }] : []),
       ],
     },
