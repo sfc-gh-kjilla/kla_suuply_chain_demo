@@ -195,30 +195,117 @@ export function useAgentChat(): UseAgentChatReturn {
     if (lowerMessage.includes('status update') || lowerMessage.includes('case esc-')) {
       const caseMatch = userMessage.match(/ESC-\d+-\d+/i);
       const caseId = caseMatch ? caseMatch[0].toUpperCase() : 'ESC-2026-4281';
-      
+
+      const fmt = (daysBack: number, time: string) => {
+        const d = new Date();
+        d.setDate(d.getDate() - daysBack);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ` ${time}`;
+      };
+
+      const caseData: Record<string, { customer: string; site: string; severity: string; sla: string; age: number; power: string; engineer: string; lastUpdateDays: number; lastUpdateTime: string; parts: string; partsStatus: string; landedCost: string; timeline: [number, string, string][]; nextSteps: string[] }> = {
+        'ESC-2026-4281': {
+          customer: 'Samsung', site: 'Pyeongtaek P3', severity: 'SEV1', sla: 'Breached 72h', age: 4,
+          power: '82.3 mW', engineer: 'Park Jin-soo', lastUpdateDays: 0, lastUpdateTime: '06:15 UTC',
+          parts: '994-023 NLO Crystal Assembly — In transit from KLA Singapore Hub',
+          partsStatus: 'Batch B-2024-A (verified good). Landed cost $48,600.',
+          landedCost: '$48,600 (unit $45,000 + shipping $1,800 + duty $0 + tax $1,800)',
+          timeline: [
+            [4, '08:00', 'Case opened — power at 82.3mW, CLBO crystal from batch B-2024-X confirmed'],
+            [3, '09:00', 'Samsung requested ETA within 24h, escalated to SEV1'],
+            [2, '08:00', 'Crystal shipment approved from Singapore Hub'],
+            [0, '06:15', 'Part in transit — expected delivery end of day'],
+          ],
+          nextSteps: ['Confirm delivery with Singapore logistics', 'Pre-schedule 8h maintenance window with Samsung ops', 'Prepare post-replacement power validation test', 'Update customer portal with ETA'],
+        },
+        'ESC-2026-4305': {
+          customer: 'Renesas', site: 'Naka Fab', severity: 'SEV1', sla: 'Breached 24h', age: 2,
+          power: '78.9 mW', engineer: 'Tanaka Hiroshi', lastUpdateDays: 1, lastUpdateTime: '22:00 UTC',
+          parts: '994-023 NLO Crystal Assembly + 994-025 Mirror Assembly — ordered, shipment pending',
+          partsStatus: 'Singapore and Dresden both have stock. Awaiting shipment confirmation.',
+          landedCost: '$51,600 via Singapore CPTPP corridor (0% duty)',
+          timeline: [
+            [2, '02:00', 'Power dropped to 78.9mW during production — 12 wafers scrapped, tool offline'],
+            [2, '06:00', 'Renesas requested RCA and repair timeline'],
+            [2, '10:00', 'Crystal thermal damage confirmed — batch B-2024-X. Mirror inspection recommended'],
+            [1, '22:00', 'Parts ordered from Singapore and Dresden — awaiting shipment confirmation'],
+          ],
+          nextSteps: ['Expedite shipment from Singapore (CPTPP: 0% duty, 1-day ETA)', 'Provide yield impact assessment to Renesas', 'Inspect mirror assembly on arrival', 'Update SEV1 status with customer VP'],
+        },
+        'ESC-2026-4198': {
+          customer: 'TSMC', site: 'Fab 15 Taichung', severity: 'SEV2', sla: 'Breached 120h', age: 8,
+          power: '91.2 mW', engineer: 'Lin Mei-hua', lastUpdateDays: 1, lastUpdateTime: '08:00 UTC',
+          parts: '994-023 NLO Crystal Assembly — backordered at San Jose, checking other hubs',
+          partsStatus: 'Backordered at KLA San Jose HQ. Singapore (2 units) and Tucson (3 units) available.',
+          landedCost: '$57,270 from Tucson (no FTA for Taiwan) or $51,400 from Singapore',
+          timeline: [
+            [8, '04:00', 'Power oscillating 89-93mW — crystal batch B-2024-X flagged, opened as SEV2'],
+            [6, '10:00', 'TSMC requested maintenance window — scheduled for next week'],
+            [4, '09:00', 'Crystal replacement from batch B-2024-A requested — inventory check initiated'],
+            [1, '08:00', 'Part backordered at San Jose — checking Singapore and Tucson hubs'],
+          ],
+          nextSteps: ['Source from Singapore Hub (lowest landed cost $51,400, 1-day delivery)', 'Confirm maintenance window with TSMC Fab 15 ops', 'Monitor power — if drops below 89mW, escalate to SEV1', 'Update TSMC on revised ETA for crystal swap'],
+        },
+        'ESC-2026-4312': {
+          customer: 'SK Hynix', site: 'Icheon', severity: 'SEV2', sla: 'At SLA limit (0h remaining)', age: 3,
+          power: '92.1 mW', engineer: 'Kim Dong-hyun', lastUpdateDays: 1, lastUpdateTime: '14:00 UTC',
+          parts: 'No parts ordered yet — monitoring phase',
+          partsStatus: 'Optics adjustment attempted. Crystal replacement may be needed within 48h.',
+          landedCost: '$54,284 from Dresden (EU-Korea FTA 3.2%) or $51,300 from Singapore',
+          timeline: [
+            [3, '06:00', 'Post-calibration beam current above normal range — correlated with power trend'],
+            [2, '12:00', 'Crystal confirmed as batch B-2024-X — optics adjustment attempted first'],
+            [1, '14:00', 'Adjustment gave temporary improvement — monitoring 48h before deciding on crystal swap'],
+          ],
+          nextSteps: ['Continue 48h monitoring window', 'Pre-order crystal now to avoid delay if swap needed', 'If power drops below 90mW, escalate to SEV1', 'Best sourcing option: Singapore ($51,300, 1-day) via ASEAN-Korea FTA'],
+        },
+        'ESC-2026-4287': {
+          customer: 'Intel', site: 'Fab 42 Chandler', severity: 'SEV3', sla: '24h remaining', age: 6,
+          power: '91.8 mW', engineer: 'John Martinez', lastUpdateDays: 2, lastUpdateTime: '10:00 UTC',
+          parts: '994-023 NLO Crystal Assembly — not yet ordered, customer scheduling downtime',
+          partsStatus: 'Tucson Hub has 3 units. Domestic shipment $49,900 (cheapest option).',
+          landedCost: '$49,900 from Tucson (domestic, $400 freight, 0% duty)',
+          timeline: [
+            [6, '16:00', 'Monitoring case opened — power declining ~0.4mW/day, batch B-2024-X confirmed'],
+            [2, '10:00', 'Customer informed — scheduling replacement during next planned downtime in 8 days'],
+          ],
+          nextSteps: ['Place order from Tucson Hub ($49,900 domestic) to have parts ready', 'Confirm downtime window with Intel Chandler ops', 'Pre-check Fab 52 Ohio scanner (same batch) proactively', 'SLA expires in 24h — escalate to SEV2 if not resolved'],
+        },
+        'ESC-2026-4156': {
+          customer: 'IMEC', site: 'Leuven Cleanroom', severity: 'SEV2', sla: 'Breached 96h', age: 7,
+          power: '92.4 mW', engineer: 'Müller Hans', lastUpdateDays: 1, lastUpdateTime: '16:00 UTC',
+          parts: '994-028 Optics Cleaning Kit + 994-023 NLO Crystal Assembly — ordered, service in 2 days',
+          partsStatus: 'Parts ordered. Full service scheduled in 2 days.',
+          landedCost: '$54,732 from Dresden (EU-Belgium domestic) + optics kit',
+          timeline: [
+            [7, '10:00', 'Optics contamination at 18ppm (threshold 15ppm) — cleaning performed but recurred'],
+            [5, '14:00', 'Root cause: B-2024-X crystal outgassing accelerating contamination'],
+            [3, '09:00', 'IMEC needs reliable tool within 3 days for experimental run'],
+            [1, '16:00', 'Optics cleaning kit + crystal ordered — full service planned in 2 days'],
+          ],
+          nextSteps: ['Confirm parts delivery from Dresden Hub', 'Execute full service: optics clean + crystal swap', 'Validate contamination levels post-service (target < 15ppm)', 'Update IMEC lab director on schedule'],
+        },
+      };
+
+      const c = caseData[caseId] || caseData['ESC-2026-4281'];
+
       return `## Case ${caseId} — Status Update
 
 ### Current Status
-- **Severity:** SEV1 | **SLA:** Breached
-- **Case Age:** 4 days
-- **Last Update:** March 26, 06:15 UTC
+- **Severity:** ${c.severity} | **SLA:** ${c.sla}
+- **Case Age:** ${c.age} days | **Customer:** ${c.customer} — ${c.site}
+- **Scanner Power:** ${c.power} | **Engineer:** ${c.engineer}
+- **Last Update:** ${fmt(c.lastUpdateDays, c.lastUpdateTime)}
 
 ### Timeline Summary
-- Mar 22: Case opened — power at 82.3mW, CLBO crystal from batch B-2024-X confirmed
-- Mar 23: Samsung requested ETA within 24h, escalated to SEV1
-- Mar 24: Crystal shipment approved from Singapore Hub
-- Mar 26: Part in transit, expected delivery end of day
+${c.timeline.map(([d, t, msg]) => `- ${fmt(d, t)}: ${msg}`).join('\n')}
 
 ### Parts Status
-- **994-023 NLO Crystal Assembly** — In transit from KLA Singapore Hub
-- Batch: B-2024-A (verified good batch)
-- Landed cost: $48,600 (unit $45,000 + shipping $1,800 + duty $0 + tax $1,800)
+- ${c.parts}
+- ${c.partsStatus}
+- Landed cost: ${c.landedCost}
 
 ### Recommended Next Steps
-1. Confirm delivery with Singapore logistics
-2. Pre-schedule 8h maintenance window with Samsung ops
-3. Prepare post-replacement power validation test
-4. Update customer portal with ETA`;
+${c.nextSteps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
     }
 
     if (lowerMessage.includes('landed cost') || lowerMessage.includes('source parts') || lowerMessage.includes('sourcing') || lowerMessage.includes('find parts')) {
@@ -241,7 +328,7 @@ export function useAgentChat(): UseAgentChatReturn {
 - US→Korea: 8% tariff on optical equipment (HS 9013.90)
 - EU→Korea: 4% tariff (EU-Korea FTA partial exemption)
 - Singapore→Korea: 0% (ASEAN-Korea FTA)
-- *Note: US tariff rate scheduled to increase to 12% effective April 15, 2026*`;
+- *Note: US tariff rate scheduled to increase to 12% — monitor trade policy updates*`;
     }
     
     if (lowerMessage.includes('transfer') && (lowerMessage.includes('unit') || lowerMessage.includes('994-023'))) {
@@ -256,7 +343,7 @@ export function useAgentChat(): UseAgentChatReturn {
       return `## Transfer Order Initiated
 
 ### Transfer Details
-- **Transfer ID:** TRF-20260326-${Math.floor(Math.random() * 10000)}
+- **Transfer ID:** TRF-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(Math.random() * 10000)}
 - **Part:** 994-023 (NLO Harmonic Crystal Assembly)
 - **Quantity:** ${qty} unit(s)
 - **From:** ${from}
@@ -284,12 +371,12 @@ This transfer may support resolution of cases waiting on parts inventory.`;
       return `## Shipment Order Created
 
 ### Order Details
-- **Order ID:** KLA-20260326-${Math.floor(Math.random() * 10000)}
+- **Order ID:** KLA-${new Date().toISOString().slice(0,10).replace(/-/g,'')}-${Math.floor(Math.random() * 10000)}
 - **Part:** 994-023 (NLO Harmonic Crystal Assembly)
 - **From:** ${from}
 - **To:** ${to}
 - **Method:** Next Day Air Priority
-- **ETA:** March 27, 2026
+- **ETA:** ${(() => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }); })()}
 
 ### Landed Cost Breakdown
 | Component | Amount |
@@ -366,13 +453,14 @@ Fleet-wide recall of B-2024-X crystals. Estimated 6 units needed, 4 currently av
     }
 
     if (lowerMessage.includes('maintenance') || lowerMessage.includes('history')) {
+      const mo = (n: number) => { const d = new Date(); d.setMonth(d.getMonth() - n); return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
       return `## Maintenance History — Related to Open Cases
 
 | Scanner | Date | Issue | Downtime | Related Case |
 |---------|------|-------|----------|-------------|
-| SCN-KR-001 | Aug 15 | Low power | 8.5h | ESC-4281 (recurrence) |
-| SCN-JP-005 | Aug 20 | Power drop | 12h | ESC-4305 (recurrence) |
-| SCN-TW-004 | Sep 20 | Misalignment | 6h | ESC-4198 |
+| SCN-KR-001 | ${mo(8)} | Low power | 8.5h | ESC-4281 (recurrence) |
+| SCN-JP-005 | ${mo(8)} | Power drop | 12h | ESC-4305 (recurrence) |
+| SCN-TW-004 | ${mo(7)} | Misalignment | 6h | ESC-4198 |
 
 ### Pattern
 3 of 3 corrective repairs involved B-2024-X batch crystals. Average downtime: 8.8 hours per crystal replacement.`;
