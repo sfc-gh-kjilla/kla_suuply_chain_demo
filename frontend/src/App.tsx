@@ -164,13 +164,8 @@ function App() {
     }
   };
 
-  const handleProceedToCompliance = (partId: string, destCustomer: string, _destCode: string, _landedCost: number) => {
-    setCompliancePrefill({
-      partId,
-      customer: destCustomer,
-      slaHours: selectedCase?.SLA_REMAINING_HOURS,
-    });
-    setActiveBottomTab('compliance');
+  const handleProceedToCompliance = (_partId: string, _destCustomer: string, _destCode: string, _landedCost: number) => {
+    setActiveBottomTab('optimize');
   };
 
   const selectedScannerData = mockScanners.find(s => s.SCANNER_ID === selectedScanner);
