@@ -765,8 +765,8 @@ function App() {
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center',
-          padding: '8px 4px',
+          justifyContent: chatCollapsed ? 'center' : 'flex-start',
+          padding: chatCollapsed ? '8px 4px' : '8px 10px',
           borderBottom: chatCollapsed ? 'none' : `1px solid ${colors.border}`,
           flexShrink: 0,
         }}>
