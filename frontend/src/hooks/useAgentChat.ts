@@ -166,7 +166,7 @@ export function useAgentChat(): UseAgentChatReturn {
 **5 of 7 open cases** involve batch B-2024-X crystals. Recommend fleet-wide recall and proactive replacement.`;
     }
 
-    if (lowerMessage.includes('sev1') || (lowerMessage.includes('sla') && lowerMessage.includes('breach'))) {
+    if ((lowerMessage.includes('sev1') || (lowerMessage.includes('sla') && lowerMessage.includes('breach'))) && !lowerMessage.includes('export compliance review')) {
       return `## SEV1 Escalation Cases
 
 ### ESC-2026-4281 — Samsung Pyeongtaek P3
@@ -344,120 +344,87 @@ ${c.nextSteps.map((s, i) => `${i + 1}. ${s}`).join('\n')}`;
       const isBlocked = status.includes('EXPORT BLOCKED');
       const isRestricted = status.includes('LICENSE REQUIRED');
 
-      const statusIcon = isBlocked ? '🚫 EXPORT BLOCKED' : isRestricted ? '⚠️ LICENSE REQUIRED' : '✅ CLEARED FOR EXPORT';
-
-      const licenseSection = isBlocked ? `### Export License & Legal Status
-- **Status:** No license can authorize this shipment under current designations
-- **Governing regulation:** EAR Part 744 (Entity List) / OFAC SDN List
-- **Required action:** Halt shipment immediately — do not proceed without legal counsel
-- **BIS/OFAC notification:** May be required depending on circumstances
-- **Recordkeeping:** Document denial and all related communications (5-year retention)` :
-        isRestricted ? `### Export License Requirements
-- **ECCN:** 3B001 — Semiconductor manufacturing equipment (EAR-controlled)
-- **License basis:** EAR Part 742 (National Security) / ITAR Category XV if applicable
-- **License type required:** BIS Item Classification + Commerce License Application (BIS-748P)
-- **Typical processing time:** 4–8 weeks standard; 2–3 weeks expedited
-- **Interim option:** License Exception STA (Strategic Trade Authorization) — check eligibility
-- **DDTC:** If ITAR-classified, submit DSP-5 application to State Dept` :
-        `### Export License Requirements
-- **ECCN:** EAR99 / 3B001 — standard commercial item, no individual license required
-- **License exception:** NLR (No License Required) applies for this destination
-- **Required documentation:** Electronic Export Information (EEI) via AES if shipment value > $2,500
-- **Certificate of origin:** Required for FTA duty preference claim
-- **End-use certificate:** Recommended for semiconductor equipment (retain 5 years)`;
-
-      const entitySection = hasEntityFlag ? `### Entity Screening Result
-- **Finding:** ${entityDetail}
-- **Database:** BIS Entity List / OFAC SDN / Denied Persons List
-- **Implication:** ${isBlocked ? 'No exports, re-exports, or transfers — zero exceptions without BIS authorization' : 'Enhanced due diligence required — obtain end-user statement and legal review before proceeding'}` :
-        `### Entity Screening Result
-- **BIS Entity List:** No match — customer cleared
-- **OFAC SDN List:** No match — no sanctions exposure
-- **Denied Persons List:** No match
-- **End-user risk:** Low — established semiconductor customer with known use case`;
-
-      const regionSection = hasRegionFlag ? `### Regional / Country Controls
-- **Finding:** ${regionDetail}
-- **Implication:** ${isBlocked ? 'Embargo or comprehensive sanctions prohibit this shipment' : 'EAR country-level restrictions apply — license required for this category'}` :
-        `### Regional / Country Controls
-- **Destination assessment:** No embargo, comprehensive sanctions, or country-level EAR restrictions
-- **Dual-use check:** Part category (${category}) is controlled but destination country is cleared for this ECCN
-- **Re-export risk:** Customer should obtain re-export authorization if further transferring the part`;
-
-      const penaltySection = isBlocked ? `### Penalties for Non-Compliance — If Shipment Proceeds
-| Violation Type | Penalty |
-|----------------|---------|
-| Criminal (EAR / IEEPA) | Up to $1,000,000 per violation + up to 20 years imprisonment |
-| Civil (BIS administrative) | Up to $300,000 per violation or 2× transaction value |
-| OFAC civil | Up to $1,078,156 per violation (inflation-adjusted) |
-| Export privilege | Denial of export privileges (company-wide) |
-| Reputational | Public denial order listing — severe customer/partner impact |
-
-> **Note:** Each item in a prohibited shipment counts as a separate violation.` :
-        isRestricted ? `### Penalties for Non-Compliance — Shipping Without License
-| Violation Type | Penalty |
-|----------------|---------|
-| Criminal (EAR) | Up to $250,000 per violation + up to 5 years imprisonment |
-| Civil (BIS) | Up to $300,000 per violation or 2× transaction value |
-| Administrative | Temporary denial order (TDO) — halts all export activity |
-| Contract exposure | Customer SLA penalties cannot be offset against compliance violations |` :
-        `### Compliance Obligations — Cleared Shipment
-| Requirement | Detail |
-|-------------|--------|
-| EEI filing (AES) | Required — value $${unitCost} exceeds $2,500 threshold |
-| Shipper's Export Declaration | Include ECCN and license exception (NLR) |
-| Certificate of Origin | Required for FTA duty preference at destination |
-| End-use recordkeeping | Retain for 5 years per EAR Part 762 |`;
-
-      const revenueSection = `### Revenue & SLA Impact
-- **Shipment value:** $${unitCost} (unit) + logistics = **$${landedCost} landed**
-- **SLA status:** ${sla}
-- **Revenue protected by clearing this shipment:** Resolves escalation case — prevents ongoing SLA penalties${isBlocked ? `
-- **Revenue blocked:** Shipment cannot proceed — escalation case remains open, SLA penalties continue accruing
-- **Alternative:** Work with legal to identify compliant sourcing or end-customer substitution` : isRestricted ? `
-- **Revenue at risk during license application:** 4–8 weeks processing = continued SLA exposure
-- **Mitigation:** Apply immediately; explore License Exception STA to reduce delay
-- **Cost of delay vs. compliance risk:** SLA penalty accrual likely exceeds expedite cost` : `
-- **No compliance-driven revenue risk** — shipment is cleared to proceed immediately`}`;
+      const statusLabel = isBlocked ? 'EXPORT BLOCKED' : isRestricted ? 'LICENSE REQUIRED' : 'CLEARED FOR EXPORT';
 
       return `## Export Compliance Verification — ${partId}
 
-**${statusIcon}**
-**Part:** ${partId} — ${partName} | **Category:** ${category}
-**Destination:** ${destination}
+### Compliance Status
+- **Result:** ${statusLabel}
+- **Part:** ${partId} — ${partName} | Category: ${category}
+- **Destination:** ${destination}
+- **Shipment value:** $${unitCost} unit + logistics = $${landedCost} landed
+- **SLA:** ${sla}
 
----
+### Classification & Licensing
+${isBlocked ? `- **ECCN:** 3B001 — Semiconductor manufacturing equipment (EAR-controlled)
+- **License status:** No license can authorize this shipment under current designations
+- **Governing regulation:** EAR Part 744 (Entity List) / OFAC SDN List
+- **Required action:** Halt shipment immediately — do not proceed without legal counsel
+- **Recordkeeping:** Document denial and all communications (5-year retention)` :
+isRestricted ? `- **ECCN:** 3B001 — Semiconductor manufacturing equipment (EAR-controlled)
+- **License required:** BIS Commerce License Application (BIS-748P)
+- **Governing regulation:** EAR Part 742 (National Security) / ITAR Category XV if applicable
+- **Processing time:** 4–8 weeks standard; 2–3 weeks expedited
+- **Interim option:** License Exception STA (Strategic Trade Authorization) — check eligibility
+- **ITAR path:** If ITAR-classified, submit DSP-5 to State Dept (DDTC)` :
+`- **ECCN:** EAR99 / 3B001 — no individual export license required for this destination
+- **License exception:** NLR (No License Required)
+- **EEI filing:** Required via AES — value $${unitCost} exceeds $2,500 threshold
+- **Certificate of origin:** Required for FTA duty preference claim
+- **End-use certificate:** Recommended — retain for 5 years per EAR Part 762`}
 
-${licenseSection}
+### Entity Screening
+${hasEntityFlag ? `- **Finding:** ${entityDetail}
+- **Database:** BIS Entity List / OFAC SDN / Denied Persons List
+- **Implication:** ${isBlocked ? 'No exports, re-exports, or transfers — zero exceptions without BIS authorization' : 'Enhanced due diligence required — obtain end-user statement before proceeding'}` :
+`- **BIS Entity List:** No match — customer cleared
+- **OFAC SDN List:** No match — no sanctions exposure
+- **Denied Persons List:** No match
+- **End-user risk:** Low — established semiconductor customer with known end use`}
 
----
+### Regional Controls
+${hasRegionFlag ? `- **Finding:** ${regionDetail}
+- **Implication:** ${isBlocked ? 'Embargo or comprehensive sanctions prohibit this shipment' : 'EAR country-level restrictions apply — license required for this part category'}` :
+`- **Embargo / sanctions:** None — destination country cleared
+- **Dual-use check:** ${category} is EAR-controlled but destination is cleared for this ECCN
+- **Re-export risk:** Customer should obtain re-export authorization before further transfer`}
 
-${entitySection}
+### Penalties${isBlocked ? ' — If Shipment Proceeds' : isRestricted ? ' — Shipping Without License' : ' — Compliance Obligations'}
+${isBlocked ? `| Violation Type | Penalty |
+|----------------|---------|
+| Criminal (EAR / IEEPA) | Up to $1,000,000/violation + up to 20 years imprisonment |
+| Civil (BIS) | Up to $300,000/violation or 2× transaction value |
+| OFAC civil | Up to $1,078,156/violation (inflation-adjusted) |
+| Export privilege | Company-wide denial of export privileges |` :
+isRestricted ? `| Violation Type | Penalty |
+|----------------|---------|
+| Criminal (EAR) | Up to $250,000/violation + up to 5 years imprisonment |
+| Civil (BIS) | Up to $300,000/violation or 2× transaction value |
+| Administrative | Temporary denial order (TDO) — halts all export activity |` :
+`| Requirement | Detail |
+|-------------|--------|
+| EEI filing (AES) | Required before export |
+| Shipper's Export Declaration | Include ECCN + license exception NLR |
+| Certificate of Origin | For FTA duty preference at destination |
+| Recordkeeping | 5 years per EAR Part 762 |`}
 
----
-
-${regionSection}
-
----
-
-${penaltySection}
-
----
-
-${revenueSection}
-
----
+### Revenue Impact
+${isBlocked ? `- **Shipment blocked** — escalation case remains open, SLA penalties continue accruing
+- **Alternative:** Work with legal to identify a compliant supply or service path` :
+isRestricted ? `- **Revenue at risk:** 4–8 week license review = continued SLA exposure during processing
+- **Mitigation:** Apply for BIS license immediately; explore License Exception STA to reduce delay` :
+`- **No compliance-driven revenue risk** — shipment is cleared to proceed immediately`}
 
 ### Recommended Actions
 ${isBlocked ? `1. **Stop shipment immediately** — notify logistics and field engineer
-2. **Escalate to legal counsel** — document circumstances and any prior due diligence
+2. **Escalate to legal counsel** — document all circumstances and prior due diligence
 3. **File voluntary self-disclosure** with BIS if shipment was partially initiated
-4. **Identify alternative supply path** — can another entity or customer fulfill the service need?
-5. **Update case status** — escalation may need alternative resolution path` :
-isRestricted ? `1. **Submit BIS-748P license application** immediately — start the clock on 4–8 week review
-2. **Check License Exception STA eligibility** — may allow shipment to proceed while license is pending
+4. **Identify alternative supply path** — compliant sourcing or service substitution
+5. **Update case status** — escalation may need an alternative resolution path` :
+isRestricted ? `1. **Submit BIS-748P license application** now — start the 4–8 week review clock
+2. **Check License Exception STA** eligibility — may allow interim shipment
 3. **Obtain end-user certificate** from ${destination} before shipment
-4. **Notify customer** of potential delay — document communication for SLA dispute mitigation
+4. **Notify customer** of potential delay — document for SLA dispute mitigation
 5. **Engage KLA legal/trade compliance** for expedited review` :
 `1. **Proceed with shipment** — all compliance checks passed
 2. **File EEI via AES** before export — include ECCN and license exception NLR
