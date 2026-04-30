@@ -7,17 +7,16 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import GppBadIcon from '@mui/icons-material/GppBad';
 import GppGoodIcon from '@mui/icons-material/GppGood';
-import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 
-type WorkflowStep = 'part' | 'costs' | 'sla' | 'compliance' | 'result';
+type WorkflowStep = 'part' | 'exportControl' | 'compliance' | 'result';
 
 const PARTS = [
-  { id: '994-023', name: 'NLO Harmonic Crystal Assembly', category: 'Laser Optics', cost: 45000 },
-  { id: '994-024', name: 'LBO Frequency Doubler Crystal', category: 'Laser Optics', cost: 28000 },
-  { id: '995-001', name: 'EUV Collector Mirror', category: 'EUV Optics', cost: 180000 },
-  { id: '995-002', name: 'Tin Droplet Generator', category: 'EUV Source', cost: 95000 },
-  { id: '996-001', name: 'Wafer Stage Interferometer', category: 'Metrology', cost: 35000 },
-  { id: '997-001', name: 'Motion Controller PCB', category: 'Electronics', cost: 8500 },
+  { id: '994-023', name: 'NLO Harmonic Crystal Assembly', category: 'Laser Optics', cost: 45000, eccn: '6A005.a', earControl: 'Dual-Use (EAR)', licenseNote: 'NS1, AT1' },
+  { id: '994-024', name: 'LBO Frequency Doubler Crystal', category: 'Laser Optics', cost: 28000, eccn: '6A005.d', earControl: 'Dual-Use (EAR)', licenseNote: 'NS1' },
+  { id: '995-001', name: 'EUV Collector Mirror', category: 'EUV Optics', cost: 180000, eccn: '3B001.f', earControl: 'Dual-Use (EAR) — Enhanced Controls', licenseNote: 'NS1, AT1, RS' },
+  { id: '995-002', name: 'Tin Droplet Generator', category: 'EUV Source', cost: 95000, eccn: '3B001.a', earControl: 'Dual-Use (EAR) — Enhanced Controls', licenseNote: 'NS1, AT1' },
+  { id: '996-001', name: 'Wafer Stage Interferometer', category: 'Metrology', cost: 35000, eccn: '3B002.a', earControl: 'Dual-Use (EAR)', licenseNote: 'NS2, AT1' },
+  { id: '997-001', name: 'Motion Controller PCB', category: 'Electronics', cost: 8500, eccn: '3A002.g', earControl: 'Dual-Use (EAR)', licenseNote: 'NS2' },
 ];
 
 const CUSTOMERS = [
@@ -49,6 +48,18 @@ const RESTRICTED_REGIONS: Record<string, { type: string; categories: string; lis
   'BY': { type: 'EXPORT_LICENSE_REQUIRED', categories: 'ALL', list: 'BIS Entity List Expansion' },
 };
 
+const DEST_CONTROLS: Record<string, { tier: string; colorKey: 'success' | 'warning' | 'critical'; description: string; licenseStatus: string }> = {
+  'KOR': { tier: 'GROUP A — TIER 1', colorKey: 'success', description: 'South Korea is a Tier 1 STA country. Strategic Trade Authorization (STA) license exception applies for most CCL items. FTA in effect.', licenseStatus: 'STA / NLR (No License Required)' },
+  'JPN': { tier: 'GROUP A — TIER 1', colorKey: 'success', description: 'Japan is a Tier 1 STA country and CPTPP member. License exception STA applies. Minimal restrictions for semiconductor equipment.', licenseStatus: 'STA / NLR (No License Required)' },
+  'TWN': { tier: 'GROUP A — TIER 1', colorKey: 'success', description: 'Taiwan is a Tier 1 STA country. License exception STA available. Treated equivalently to close allies for most dual-use exports.', licenseStatus: 'STA / NLR (No License Required)' },
+  'BEL': { tier: 'GROUP A — EU MEMBER', colorKey: 'success', description: 'Belgium is an EU member and NATO ally. STA license exception available. EU dual-use regulation 2021/821 applies domestically.', licenseStatus: 'STA / NLR (No License Required)' },
+  'USA': { tier: 'DOMESTIC', colorKey: 'success', description: 'Domestic shipment within the United States. No export license required. EAR Part 740 domestic transfer rules apply.', licenseStatus: 'N/A — Domestic Transfer' },
+  'CN': { tier: 'ENHANCED CONTROLS', colorKey: 'warning', description: 'China subject to Oct 2022 BIS Advanced Computing & Semiconductor Rule. Items classified 3B001 require license. EUV-related items face presumption of denial.', licenseStatus: 'License Required (3B001 / EUV items)' },
+  'RU': { tier: 'PROHIBITED — EMBARGO', colorKey: 'critical', description: 'Russia subject to comprehensive OFAC / BIS sanctions since Feb 2022. All semiconductor manufacturing equipment exports prohibited. No license exceptions available.', licenseStatus: 'Prohibited — No License Available' },
+  'IR': { tier: 'PROHIBITED — EMBARGO', colorKey: 'critical', description: 'Iran under comprehensive OFAC sanctions (31 CFR Part 560). All US-origin goods and technology prohibited without OFAC authorization.', licenseStatus: 'Prohibited — No License Available' },
+  'KP': { tier: 'PROHIBITED — EMBARGO', colorKey: 'critical', description: 'North Korea under comprehensive OFAC sanctions and UN Security Council resolutions. All exports/reexports prohibited.', licenseStatus: 'Prohibited — No License Available' },
+};
+
 const TARIFFS: Record<string, { rate: number; freight: number; fta?: string }> = {
   'USA-KOR': { rate: 0.08, freight: 4500 },
   'SGP-KOR': { rate: 0.00, freight: 1800, fta: 'ASEAN-Korea' },
@@ -69,12 +80,11 @@ interface TradeCompliancePanelProps {
   selectedCase?: EscalationCase | null;
 }
 
-export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, prefillCustomer, prefillSlaHours, selectedCase }: TradeCompliancePanelProps) {
+export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, prefillCustomer, selectedCase }: TradeCompliancePanelProps) {
   const { colors } = useTheme();
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('part');
   const [selectedPartIdx, setSelectedPartIdx] = useState(0);
   const [selectedCustIdx, setSelectedCustIdx] = useState(0);
-  const [slaHours, setSlaHours] = useState(48);
   const [complianceResult, setComplianceResult] = useState<{
     entityBlocked: boolean;
     regionBlocked: boolean;
@@ -92,9 +102,6 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
       const idx = CUSTOMERS.findIndex(c => c.name === prefillCustomer);
       if (idx >= 0) setSelectedCustIdx(idx);
     }
-    if (prefillSlaHours !== undefined) {
-      setSlaHours(Math.max(-120, Math.min(120, prefillSlaHours)));
-    }
     if (selectedCase) {
       const neededPart = selectedCase.PARTS_NEEDED[0];
       if (neededPart) {
@@ -103,19 +110,17 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
       }
       const custIdx = CUSTOMERS.findIndex(c => c.name === selectedCase.CUSTOMER);
       if (custIdx >= 0) setSelectedCustIdx(custIdx);
-      setSlaHours(Math.max(-120, Math.min(120, selectedCase.SLA_REMAINING_HOURS)));
     }
-  }, [prefillPartId, prefillCustomer, prefillSlaHours, selectedCase]);
+  }, [prefillPartId, prefillCustomer, selectedCase]);
 
   const part = PARTS[selectedPartIdx];
   const cust = CUSTOMERS[selectedCustIdx];
 
   const steps: { id: WorkflowStep; label: string; num: number }[] = [
     { id: 'part', label: 'Select Part & Dest', num: 1 },
-    { id: 'costs', label: 'Review Costs', num: 2 },
-    { id: 'sla', label: 'SLA Check', num: 3 },
-    { id: 'compliance', label: 'Compliance Check', num: 4 },
-    { id: 'result', label: 'Result', num: 5 },
+    { id: 'exportControl', label: 'Export Control', num: 2 },
+    { id: 'compliance', label: 'Compliance Check', num: 3 },
+    { id: 'result', label: 'Result', num: 4 },
   ];
 
   const stepIdx = steps.findIndex(s => s.id === currentStep);
@@ -229,89 +234,88 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
                 </div>
               </div>
             </div>
-            <button onClick={() => setCurrentStep('costs')} style={{
+            <button onClick={() => setCurrentStep('exportControl')} style={{
               marginTop: '14px', padding: '8px 20px', borderRadius: '6px', border: 'none',
               background: colors.accent, color: 'white',
               fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
             }}>
-              Next: Review Costs <ArrowForwardIcon style={{ fontSize: 14 }} />
+              Next: Export Control <ArrowForwardIcon style={{ fontSize: 14 }} />
             </button>
           </div>
         )}
 
-        {currentStep === 'costs' && (
-          <div style={{ background: colors.bg, borderRadius: '8px', border: `1px solid ${colors.border}`, padding: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
+        {currentStep === 'exportControl' && (
+          <div style={{ background: colors.bg, borderRadius: '8px', border: `1px solid ${colors.border}`, padding: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <VerifiedUserIcon style={{ fontSize: 18, color: colors.accent }} />
-              <span style={{ fontSize: '13px', fontWeight: 600 }}>Step 2: Cost Review — {part.id} to {cust.city}</span>
+              <span style={{ fontSize: '13px', fontWeight: 600 }}>Step 2: Export Control Check</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', marginBottom: '12px' }}>
-              {[
-                { label: 'Unit Cost', value: `$${part.cost.toLocaleString()}` },
-                { label: 'Freight', value: `$${costData.freight.toLocaleString()}` },
-                { label: 'Import Duty', value: `$${costData.duty.toLocaleString(undefined, { maximumFractionDigits: 0 })}` },
-                { label: 'Total Landed', value: `$${costData.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}` },
-              ].map(item => (
-                <div key={item.label} style={{ background: colors.bgSecondary, borderRadius: '6px', padding: '10px', textAlign: 'center', border: `1px solid ${colors.border}` }}>
-                  <div style={{ fontSize: '16px', fontWeight: 700, color: colors.text }}>{item.value}</div>
-                  <div style={{ fontSize: '9px', color: colors.textMuted, marginTop: '2px' }}>{item.label}</div>
-                </div>
-              ))}
-            </div>
-            {costData.fta && (
-              <div style={{ fontSize: '11px', color: colors.success, background: colors.success + '15', padding: '6px 10px', borderRadius: '5px', marginBottom: '10px' }}>
-                FTA applies: {costData.fta}
+
+            {/* Educational info */}
+            <div style={{ background: colors.accent + '10', borderRadius: '6px', padding: '10px 12px', border: `1px solid ${colors.accent}30` }}>
+              <div style={{ fontSize: '10px', fontWeight: 700, color: colors.accent, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>About US Export Controls</div>
+              <div style={{ fontSize: '11px', color: colors.text, lineHeight: 1.6, marginBottom: '8px' }}>
+                US export controls govern the transfer of sensitive technology and equipment to foreign parties. Two primary frameworks apply to semiconductor manufacturing equipment:
               </div>
-            )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                <div style={{ background: colors.bgSecondary, borderRadius: '5px', padding: '8px', border: `1px solid ${colors.border}` }}>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: colors.text, marginBottom: '3px' }}>EAR — Export Administration Regulations</div>
+                  <div style={{ fontSize: '10px', color: colors.textMuted, lineHeight: 1.5 }}>
+                    Administered by BIS (Commerce Dept.). Covers dual-use items via ECCN codes on the Commerce Control List. Most semiconductor equipment falls under EAR. Violations: up to $1M per incident or 20 years imprisonment.
+                  </div>
+                </div>
+                <div style={{ background: colors.bgSecondary, borderRadius: '5px', padding: '8px', border: `1px solid ${colors.border}` }}>
+                  <div style={{ fontSize: '10px', fontWeight: 700, color: colors.text, marginBottom: '3px' }}>ITAR — Intl. Traffic in Arms Regulations</div>
+                  <div style={{ fontSize: '10px', color: colors.textMuted, lineHeight: 1.5 }}>
+                    Administered by DDTC (State Dept.). Governs defense articles on the USML. Stricter than EAR — requires licenses for most foreign persons. Once ITAR-controlled, always ITAR regardless of modifications.
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* ECCN classification */}
+            <div style={{ background: colors.bgSecondary, borderRadius: '6px', padding: '10px 12px', border: `1px solid ${colors.border}` }}>
+              <div style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>ECCN Classification — {part.id}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px', textAlign: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '20px', fontWeight: 800, color: colors.accent, letterSpacing: '-0.5px' }}>{part.eccn}</div>
+                  <div style={{ fontSize: '9px', color: colors.textMuted, marginTop: '2px' }}>ECCN Code</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: 700, color: colors.text }}>{part.earControl}</div>
+                  <div style={{ fontSize: '9px', color: colors.textMuted, marginTop: '2px' }}>Control Regime</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '11px', fontWeight: 600, color: colors.text }}>{part.licenseNote}</div>
+                  <div style={{ fontSize: '9px', color: colors.textMuted, marginTop: '2px' }}>Reasons for Control</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Destination control analysis */}
+            {(() => {
+              const destCtrl = DEST_CONTROLS[cust.code] || { tier: 'UNKNOWN', colorKey: 'warning' as const, description: 'No control profile found. Manual review recommended before proceeding.', licenseStatus: 'Manual Review Required' };
+              const c = destCtrl.colorKey === 'success' ? colors.success : destCtrl.colorKey === 'warning' ? colors.warning : colors.critical;
+              return (
+                <div style={{ background: c + '0d', borderRadius: '6px', padding: '10px 12px', border: `1px solid ${c}40` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '6px' }}>
+                    <div style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Destination Control Analysis</div>
+                    <span style={{ fontSize: '10px', fontWeight: 700, padding: '2px 8px', borderRadius: '4px', background: c + '20', color: c, border: `1px solid ${c}40` }}>
+                      {destCtrl.tier}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '12px', fontWeight: 600, color: colors.text, marginBottom: '4px' }}>{cust.name} — {cust.city}, {cust.country} ({cust.code})</div>
+                  <div style={{ fontSize: '11px', color: colors.textMuted, lineHeight: 1.5, marginBottom: '8px' }}>{destCtrl.description}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontSize: '9px', color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase' }}>License Status:</span>
+                    <span style={{ fontSize: '11px', fontWeight: 700, color: c }}>{destCtrl.licenseStatus}</span>
+                  </div>
+                </div>
+              );
+            })()}
+
             <div style={{ display: 'flex', gap: '8px' }}>
               <button onClick={() => setCurrentStep('part')} style={{
-                padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.border}`,
-                background: 'transparent', color: colors.text, fontSize: '12px', cursor: 'pointer',
-              }}>Back</button>
-              <button onClick={() => setCurrentStep('sla')} style={{
-                padding: '8px 20px', borderRadius: '6px', border: 'none',
-                background: colors.accent, color: 'white',
-                fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-              }}>
-                Next: SLA Check <ArrowForwardIcon style={{ fontSize: 14 }} />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {currentStep === 'sla' && (
-          <div style={{ background: colors.bg, borderRadius: '8px', border: `1px solid ${colors.border}`, padding: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-              <VerifiedUserIcon style={{ fontSize: 18, color: colors.accent }} />
-              <span style={{ fontSize: '13px', fontWeight: 600 }}>Step 3: SLA Validation</span>
-            </div>
-            <div style={{ marginBottom: '12px' }}>
-              <div style={{ fontSize: '10px', color: colors.textMuted, marginBottom: '4px', fontWeight: 600 }}>SLA REMAINING (hours)</div>
-              <input type="range" min={-120} max={120} step={1} value={slaHours}
-                onChange={e => setSlaHours(+e.target.value)}
-                style={{ width: '100%', cursor: 'pointer' }} />
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', marginTop: '2px' }}>
-                <span style={{ color: colors.critical }}>-120h (Breached)</span>
-                <span style={{ color: slaHours < 0 ? colors.critical : slaHours < 24 ? colors.warning : colors.success, fontWeight: 700, fontSize: '14px' }}>
-                  {slaHours}h
-                </span>
-                <span style={{ color: colors.success }}>+120h (Healthy)</span>
-              </div>
-            </div>
-            {slaHours < 0 && (
-              <div style={{ background: 'transparent', border: `1px solid ${colors.critical}40`, borderRadius: '6px', padding: '8px 10px', marginBottom: '10px', fontSize: '11px', color: colors.critical, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <WarningAmberIcon style={{ fontSize: 16 }} />
-                SLA BREACHED by {Math.abs(slaHours)} hours. Penalty accruing. Expedited shipment recommended.
-              </div>
-            )}
-            {slaHours >= 0 && slaHours < 24 && (
-              <div style={{ background: colors.warning + '15', border: `1px solid ${colors.warning}40`, borderRadius: '6px', padding: '8px 10px', marginBottom: '10px', fontSize: '11px', color: colors.warning, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <WarningAmberIcon style={{ fontSize: 16 }} />
-                SLA at risk. Only {slaHours}h remaining. Consider expedited shipping.
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => setCurrentStep('costs')} style={{
                 padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.border}`,
                 background: 'transparent', color: colors.text, fontSize: '12px', cursor: 'pointer',
               }}>Back</button>
@@ -320,7 +324,7 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
                 background: colors.accent, color: 'white',
                 fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
               }}>
-                Next: Compliance Check <ArrowForwardIcon style={{ fontSize: 14 }} />
+                Next: Entity & Region Screening <ArrowForwardIcon style={{ fontSize: 14 }} />
               </button>
             </div>
           </div>
@@ -330,7 +334,7 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
           <div style={{ background: colors.bg, borderRadius: '8px', border: `1px solid ${colors.border}`, padding: '14px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
               <VerifiedUserIcon style={{ fontSize: 18, color: colors.accent }} />
-              <span style={{ fontSize: '13px', fontWeight: 600 }}>Step 4: Export Compliance Screening</span>
+              <span style={{ fontSize: '13px', fontWeight: 600 }}>Step 3: Entity & Region Screening</span>
             </div>
             <div style={{ background: colors.bgSecondary, borderRadius: '6px', padding: '10px', marginBottom: '12px', border: `1px solid ${colors.border}` }}>
               <div style={{ fontSize: '11px', marginBottom: '4px' }}>
@@ -350,7 +354,7 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
               Screening against US Entity List (BIS), OFAC SDN List, and regional export control regulations.
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => setCurrentStep('sla')} style={{
+              <button onClick={() => setCurrentStep('exportControl')} style={{
                 padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.border}`,
                 background: 'transparent', color: colors.text, fontSize: '12px', cursor: 'pointer',
               }}>Back</button>
@@ -368,8 +372,7 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
         {currentStep === 'result' && complianceResult && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={{
-                background: isBlocked ? 'transparent' : isRestricted ? colors.warning + '10' : colors.success + '10',
-                      border: isBlocked ? `1px solid ${colors.critical}40` : 'none',
+              background: isBlocked ? 'transparent' : isRestricted ? colors.warning + '10' : colors.success + '10',
               borderRadius: '8px',
               border: `1px solid ${isBlocked ? colors.critical + '60' : isRestricted ? colors.warning + '60' : colors.success + '60'}`,
               padding: '14px',
@@ -478,7 +481,7 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
                 New Check
               </button>
               {onAskAI && (
-                <button onClick={() => onAskAI(`Export compliance review for ${part.id} — ${part.name} (${part.category}, unit cost $${part.cost.toLocaleString()}) shipping to ${cust.name}, ${cust.city}, ${cust.country}. Compliance status: ${isBlocked ? 'EXPORT BLOCKED' : isRestricted ? 'LICENSE REQUIRED (EAR/ITAR)' : 'CLEARED FOR EXPORT'}.${complianceResult?.entityBlocked ? ` Entity screening: ${complianceResult.entityDetail?.level} match on ${complianceResult.entityDetail?.list} — ${complianceResult.entityDetail?.reason}.` : ''}${complianceResult?.regionBlocked ? ` Region control: ${complianceResult.regionDetail?.type} (${complianceResult.regionDetail?.list}, categories: ${complianceResult.regionDetail?.categories}).` : ''} Landed cost exposure: $${costData.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}. SLA: ${slaHours < 0 ? `breached by ${Math.abs(slaHours)}h` : `${slaHours}h remaining`}. What specific export control obligations and licenses apply, what are the penalties for non-compliance, and what revenue is protected or at risk if this shipment is delayed or blocked?`)}
+                <button onClick={() => onAskAI(`Export compliance review for ${part.id} — ${part.name} (${part.category}, unit cost $${part.cost.toLocaleString()}) shipping to ${cust.name}, ${cust.city}, ${cust.country}. ECCN: ${part.eccn} (${part.earControl}). Compliance status: ${isBlocked ? 'EXPORT BLOCKED' : isRestricted ? 'LICENSE REQUIRED (EAR/ITAR)' : 'CLEARED FOR EXPORT'}.${complianceResult?.entityBlocked ? ` Entity screening: ${complianceResult.entityDetail?.level} match on ${complianceResult.entityDetail?.list} — ${complianceResult.entityDetail?.reason}.` : ''}${complianceResult?.regionBlocked ? ` Region control: ${complianceResult.regionDetail?.type} (${complianceResult.regionDetail?.list}, categories: ${complianceResult.regionDetail?.categories}).` : ''} Landed cost exposure: $${costData.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}. What specific export control obligations and licenses apply, what are the penalties for non-compliance, and what revenue is protected or at risk if this shipment is delayed or blocked?`)}
                   style={{
                     padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}40`,
                     background: colors.accent + '10', color: colors.accent, fontSize: '11px', fontWeight: 600,

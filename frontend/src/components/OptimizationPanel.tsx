@@ -191,7 +191,7 @@ interface OptimizationPanelProps {
   onProceedToCompliance?: () => void;
 }
 
-export function OptimizationPanel({ onAskAI, onProceedToCompliance }: OptimizationPanelProps) {
+export function OptimizationPanel({ onAskAI: _onAskAI, onProceedToCompliance }: OptimizationPanelProps) {
   const { colors } = useTheme();
   const [params, setParams] = useState<OptParams>({
     sev1Penalty: 50000, sev2Penalty: 25000, sev3Penalty: 10000,

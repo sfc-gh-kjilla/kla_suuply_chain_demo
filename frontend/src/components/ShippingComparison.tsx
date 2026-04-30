@@ -81,6 +81,33 @@ export const ShippingComparison: React.FC<ShippingComparisonProps> = ({
         <span><strong>Part:</strong> {partName}</span>
         <span><strong>Ship To:</strong> {destinationScanner}</span>
       </div>
+
+      {/* Cost summary tiles — best option */}
+      {(() => {
+        const opt = bestCostOption;
+        const duty = opt.IMPORT_DUTY ?? opt.TAX_AMOUNT * 0.3;
+        const landed = opt.LANDED_COST ?? opt.TOTAL_COST;
+        return (
+          <div style={{ marginBottom: '10px' }}>
+            <div style={{ fontSize: '10px', color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>
+              Cost Summary — Best Option ({opt.WAREHOUSE_LOCATION})
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
+              {[
+                { label: 'Unit Cost', value: `$${opt.UNIT_COST.toLocaleString()}` },
+                { label: 'Freight', value: `$${opt.SHIPPING_COST.toLocaleString()}` },
+                { label: 'Import Duty', value: `$${Math.round(duty).toLocaleString()}` },
+                { label: 'Total Landed', value: `$${landed.toLocaleString()}` },
+              ].map(item => (
+                <div key={item.label} style={{ background: colors.bg, borderRadius: '6px', padding: '8px', textAlign: 'center', border: `1px solid ${colors.border}` }}>
+                  <div style={{ fontSize: '15px', fontWeight: 700, color: colors.text }}>{item.value}</div>
+                  <div style={{ fontSize: '9px', color: colors.textMuted, marginTop: '2px' }}>{item.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
       
       <div style={{ 
         display: 'grid', 

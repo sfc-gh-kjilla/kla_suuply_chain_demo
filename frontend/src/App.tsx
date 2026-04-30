@@ -98,7 +98,7 @@ function App() {
       return stored ? new Set<string>(JSON.parse(stored)) : new Set<string>();
     } catch { return new Set<string>(); }
   });
-  const [compliancePrefill, setCompliancePrefill] = useState<{ partId?: string; customer?: string; slaHours?: number } | null>(null);
+  const [compliancePrefill, _setCompliancePrefill] = useState<{ partId?: string; customer?: string; slaHours?: number } | null>(null);
 
   // Reset shipment/resolve state when the selected case changes
   useEffect(() => {
