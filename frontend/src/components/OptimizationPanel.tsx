@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
+import type { EscalationCase } from '../types';
 import { useTheme } from '../context/ThemeContext';
 import TuneIcon from '@mui/icons-material/Tune';
 import PlayArrowIcon from '@mui/icons-material/PlayArrow';
@@ -103,13 +104,14 @@ function getShippingDays(origin: string, destCountry: string): number {
   return TARIFFS[key]?.days ?? 3;
 }
 
-function solveGreedy(params: OptParams): OptResult {
+function solveGreedy(params: OptParams, casesOverride?: typeof CASES): OptResult {
+  const cases = casesOverride ?? CASES;
   const sevPenalties: Record<string, number> = { SEV1: params.sev1Penalty, SEV2: params.sev2Penalty, SEV3: params.sev3Penalty };
   const stock = Object.fromEntries(WAREHOUSES.map(w => [w.id, w.stock]));
   const assignments: Assignment[] = [];
   const unfulfilled: { caseId: string; customer: string; severity: string }[] = [];
 
-  const sortedCases = [...CASES].sort((a, b) => {
+  const sortedCases = [...cases].sort((a, b) => {
     const sevOrder: Record<string, number> = { SEV1: 0, SEV2: 1, SEV3: 2 };
     if (params.priorityCustomer !== 'All Equal') {
       if (a.customer === params.priorityCustomer && b.customer !== params.priorityCustomer) return -1;
@@ -172,7 +174,7 @@ function solveGreedy(params: OptParams): OptResult {
     shipping: assignments.reduce((s, a) => s + a.landedCost, 0),
     transfer: transfers.reduce((s, t) => s + t.cost, 0),
     slaPenalty: unfulfilled.reduce((s, u) => {
-      const c = CASES.find(cc => cc.id === u.caseId)!;
+      const c = cases.find(cc => cc.id === u.caseId)!;
       const breach = Math.max(0, -c.slaHrs);
       return s + (sevPenalties[u.severity] || 10000) * Math.max(1, breach);
     }, 0),
@@ -181,7 +183,7 @@ function solveGreedy(params: OptParams): OptResult {
   return {
     status: 'Optimal',
     totalCost: costBreakdown.shipping + costBreakdown.transfer + costBreakdown.slaPenalty,
-    slaCoverage: Math.round((assignments.length / CASES.length) * 1000) / 10,
+    slaCoverage: Math.round((assignments.length / cases.length) * 1000) / 10,
     assignments, transfers, unfulfilled, costBreakdown,
   };
 }
@@ -189,10 +191,12 @@ function solveGreedy(params: OptParams): OptResult {
 interface OptimizationPanelProps {
   onAskAI?: (prompt: string) => void;
   onProceedToCompliance?: () => void;
+  selectedCase?: EscalationCase | null;
 }
 
-export function OptimizationPanel({ onAskAI: _onAskAI, onProceedToCompliance }: OptimizationPanelProps) {
+export function OptimizationPanel({ onAskAI: _onAskAI, onProceedToCompliance, selectedCase }: OptimizationPanelProps) {
   const { colors } = useTheme();
+  const [singleCaseMode, setSingleCaseMode] = useState(true);
   const [params, setParams] = useState<OptParams>({
     sev1Penalty: 50000, sev2Penalty: 25000, sev3Penalty: 10000,
     shippingMult: 1.0, transferMult: 1.0,
@@ -207,14 +211,19 @@ export function OptimizationPanel({ onAskAI: _onAskAI, onProceedToCompliance }: 
   const runOptimization = useCallback(() => {
     setIsRunning(true);
     setTimeout(() => {
-      const r = solveGreedy(params);
+      let casesToRun = CASES;
+      if (singleCaseMode && selectedCase) {
+        const match = CASES.find(c => c.id === selectedCase.CASE_ID);
+        casesToRun = match ? [match] : CASES;
+      }
+      const r = solveGreedy(params, casesToRun);
       setResult(r);
       setOverrideAssignments(r.assignments.map(a => ({ ...a })));
       setOverrideMode(false);
       setEditingIdx(null);
       setIsRunning(false);
     }, 600);
-  }, [params]);
+  }, [params, singleCaseMode, selectedCase]);
 
   const handleOverrideWarehouse = (idx: number, newWhId: string) => {
     const wh = WAREHOUSES.find(w => w.id === newWhId);
@@ -252,6 +261,26 @@ export function OptimizationPanel({ onAskAI: _onAskAI, onProceedToCompliance }: 
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
             <TuneIcon style={{ fontSize: 16, color: colors.accent }} />
             <span style={{ fontSize: '12px', fontWeight: 600 }}>Scenario Parameters</span>
+          </div>
+
+          {/* Scope toggle */}
+          <div style={{ background: colors.bgSecondary, borderRadius: '6px', padding: '8px 10px', marginBottom: '10px', border: `1px solid ${colors.border}` }}>
+            <div style={{ fontSize: '10px', color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '6px' }}>Optimization Scope</div>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '11px', color: singleCaseMode ? colors.accent : colors.textMuted, cursor: 'pointer', marginBottom: '4px' }}>
+              <input type="radio" name="optScope" checked={singleCaseMode} onChange={() => { setSingleCaseMode(true); setResult(null); }}
+                style={{ accentColor: colors.accent }} />
+              <span style={{ fontWeight: singleCaseMode ? 700 : 400 }}>
+                Current ticket only
+                {selectedCase && singleCaseMode && (
+                  <span style={{ color: colors.textMuted, fontWeight: 400 }}> — {selectedCase.CASE_ID}</span>
+                )}
+              </span>
+            </label>
+            <label style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '11px', color: !singleCaseMode ? colors.accent : colors.textMuted, cursor: 'pointer' }}>
+              <input type="radio" name="optScope" checked={!singleCaseMode} onChange={() => { setSingleCaseMode(false); setResult(null); }}
+                style={{ accentColor: colors.accent }} />
+              <span style={{ fontWeight: !singleCaseMode ? 700 : 400 }}>All open tickets ({CASES.length})</span>
+            </label>
           </div>
 
           <div style={{ fontSize: '10px', color: colors.textMuted, marginBottom: '4px', fontWeight: 600 }}>SLA PENALTIES</div>

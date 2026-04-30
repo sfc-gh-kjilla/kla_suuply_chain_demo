@@ -770,7 +770,7 @@ function App() {
                   />
                 )}
                 {activeBottomTab === 'optimize' && (
-                  <OptimizationPanel onAskAI={triggerChatPrompt} onProceedToCompliance={() => setActiveBottomTab('compliance')} />
+                  <OptimizationPanel onAskAI={triggerChatPrompt} onProceedToCompliance={() => setActiveBottomTab('compliance')} selectedCase={selectedCase} />
                 )}
                 {activeBottomTab === 'multiSource' && (
                   <MultiSourcingPanel
