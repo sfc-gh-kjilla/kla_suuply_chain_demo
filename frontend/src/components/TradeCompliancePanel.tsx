@@ -233,13 +233,64 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
                 </div>
               </div>
             </div>
-            <button onClick={() => setCurrentStep('exportControl')} style={{
-              marginTop: '14px', padding: '8px 20px', borderRadius: '6px', border: 'none',
-              background: colors.accent, color: 'white',
-              fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-            }}>
-              Next: Export Control <ArrowForwardIcon style={{ fontSize: 14 }} />
-            </button>
+            <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={() => setCurrentStep('exportControl')} style={{
+                  padding: '8px 20px', borderRadius: '6px', border: 'none',
+                  background: colors.accent, color: 'white',
+                  fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
+                }}>
+                  Next: Export Control <ArrowForwardIcon style={{ fontSize: 14 }} />
+                </button>
+              </div>
+              {onAskAI && (
+                <button onClick={() => onAskAI(
+                  `Please explain the following US export control terms and how they apply to semiconductor manufacturing equipment like KLA parts:\n\n` +
+                  `REGULATORY FRAMEWORKS:\n` +
+                  `• EAR (Export Administration Regulations) — Commerce/BIS rules for dual-use items via ECCN codes on the Commerce Control List. Violations: up to $1M per incident or 20 years imprisonment.\n` +
+                  `• ITAR (International Traffic in Arms Regulations) — State/DDTC rules for defense articles on the USML. Stricter than EAR; once ITAR-controlled, always ITAR.\n` +
+                  `• BIS (Bureau of Industry and Security) — administers EAR, maintains the Entity List.\n` +
+                  `• OFAC (Office of Foreign Assets Control) — administers economic sanctions (SDN List, embargoes).\n\n` +
+                  `ECCN CODES IN USE:\n` +
+                  `• 3B001.f — EUV Collector Mirror (semiconductor lithography equipment, highest control tier)\n` +
+                  `• 3B001.a — Tin Droplet Generator (semiconductor manufacturing equipment)\n` +
+                  `• 3B002.a — Wafer Stage Interferometer (metrology equipment)\n` +
+                  `• 3A002.g — Motion Controller PCB (electronic test/measurement)\n` +
+                  `• 6A005.a — NLO Harmonic Crystal Assembly (high-power lasers)\n` +
+                  `• 6A005.d — LBO Frequency Doubler Crystal (optical components for lasers)\n\n` +
+                  `REASONS FOR CONTROL:\n` +
+                  `• NS1 (National Security 1) — highest tier, requires license to most non-allied destinations\n` +
+                  `• NS2 (National Security 2) — lower tier, fewer restrictions\n` +
+                  `• AT1 (Anti-Terrorism 1) — applies to embargoed countries\n` +
+                  `• RS (Regional Stability) — items that could destabilize a region (EUV equipment for China)\n\n` +
+                  `LICENSE TYPES & EXCEPTIONS:\n` +
+                  `• NLR (No License Required) — default for friendly countries qualifying for exceptions\n` +
+                  `• STA (Strategic Trade Authorization) — license exception for Group A Tier 1 allied countries\n` +
+                  `• License Required — formal BIS application required (weeks to process); EUV to China = presumption of denial\n` +
+                  `• No License Available — embargoed countries (Russia, Iran, North Korea)\n\n` +
+                  `DESTINATION TIERS:\n` +
+                  `• Group A Tier 1 (South Korea, Japan, Taiwan) — STA exception available\n` +
+                  `• Group A EU Member (Belgium) — STA available, EU dual-use regulation 2021/821 also applies\n` +
+                  `• Domestic (USA) — no export control, EAR Part 740 domestic transfer rules\n` +
+                  `• Enhanced Controls (China) — Oct 2022 BIS Advanced Computing Rule; 3B001 items require license\n` +
+                  `• Prohibited Embargo (Russia, Iran, North Korea) — comprehensive sanctions, no licenses available\n\n` +
+                  `SCREENING LISTS:\n` +
+                  `• US Entity List (BIS) — requires license for ANY US-origin item to listed companies (Huawei, SMIC, YMTC)\n` +
+                  `• OFAC SDN List — blocked persons/entities; US persons prohibited from dealing with them\n` +
+                  `• OFAC Comprehensive Sanctions — country-wide prohibitions\n\n` +
+                  `ENTITY STATUS LEVELS:\n` +
+                  `• DENIED — export prohibited, no license granted (Huawei, YMTC, Russian Microelectronics)\n` +
+                  `• RESTRICTED — license required but may be grantable (SMIC, Baikal Electronics)\n\n` +
+                  `Please explain these terms in plain language, give examples of how they interact, and describe what a compliance officer should check before approving a shipment of KLA semiconductor equipment.`
+                )} style={{
+                  padding: '7px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}40`,
+                  background: colors.accent + '10', color: colors.accent, fontSize: '11px', fontWeight: 600,
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', width: 'fit-content',
+                }}>
+                  <VerifiedUserIcon style={{ fontSize: 13 }} /> Ask AI — Explain Export Control Terms
+                </button>
+              )}
+            </div>
           </div>
         )}
 
