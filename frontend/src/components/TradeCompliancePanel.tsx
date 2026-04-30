@@ -8,7 +8,7 @@ import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import GppBadIcon from '@mui/icons-material/GppBad';
 import GppGoodIcon from '@mui/icons-material/GppGood';
 
-type WorkflowStep = 'part' | 'exportControl' | 'compliance' | 'result';
+type WorkflowStep = 'part' | 'exportControl' | 'result';
 
 const PARTS = [
   { id: '994-023', name: 'NLO Harmonic Crystal Assembly', category: 'Laser Optics', cost: 45000, eccn: '6A005.a', earControl: 'Dual-Use (EAR)', licenseNote: 'NS1, AT1' },
@@ -119,8 +119,7 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
   const steps: { id: WorkflowStep; label: string; num: number }[] = [
     { id: 'part', label: 'Select Part & Dest', num: 1 },
     { id: 'exportControl', label: 'Export Control', num: 2 },
-    { id: 'compliance', label: 'Compliance Check', num: 3 },
-    { id: 'result', label: 'Result', num: 4 },
+    { id: 'result', label: 'Result', num: 3 },
   ];
 
   const stepIdx = steps.findIndex(s => s.id === currentStep);
@@ -319,51 +318,12 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
                 padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.border}`,
                 background: 'transparent', color: colors.text, fontSize: '12px', cursor: 'pointer',
               }}>Back</button>
-              <button onClick={() => setCurrentStep('compliance')} style={{
-                padding: '8px 20px', borderRadius: '6px', border: 'none',
-                background: colors.accent, color: 'white',
-                fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
-              }}>
-                Next: Entity & Region Screening <ArrowForwardIcon style={{ fontSize: 14 }} />
-              </button>
-            </div>
-          </div>
-        )}
-
-        {currentStep === 'compliance' && (
-          <div style={{ background: colors.bg, borderRadius: '8px', border: `1px solid ${colors.border}`, padding: '14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
-              <VerifiedUserIcon style={{ fontSize: 18, color: colors.accent }} />
-              <span style={{ fontSize: '13px', fontWeight: 600 }}>Step 3: Entity & Region Screening</span>
-            </div>
-            <div style={{ background: colors.bgSecondary, borderRadius: '6px', padding: '10px', marginBottom: '12px', border: `1px solid ${colors.border}` }}>
-              <div style={{ fontSize: '11px', marginBottom: '4px' }}>
-                <span style={{ color: colors.textMuted }}>Part:</span> <span style={{ fontWeight: 600 }}>{part.id} — {part.name}</span>
-              </div>
-              <div style={{ fontSize: '11px', marginBottom: '4px' }}>
-                <span style={{ color: colors.textMuted }}>Category:</span> <span style={{ fontWeight: 600 }}>{part.category}</span>
-              </div>
-              <div style={{ fontSize: '11px', marginBottom: '4px' }}>
-                <span style={{ color: colors.textMuted }}>Destination:</span> <span style={{ fontWeight: 600 }}>{cust.name} — {cust.city}, {cust.country} ({cust.code})</span>
-              </div>
-              <div style={{ fontSize: '11px' }}>
-                <span style={{ color: colors.textMuted }}>Shipment Value:</span> <span style={{ fontWeight: 600 }}>${costData.total.toLocaleString(undefined, { maximumFractionDigits: 0 })}</span>
-              </div>
-            </div>
-            <div style={{ fontSize: '10px', color: colors.textMuted, marginBottom: '8px' }}>
-              Screening against US Entity List (BIS), OFAC SDN List, and regional export control regulations.
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button onClick={() => setCurrentStep('exportControl')} style={{
-                padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.border}`,
-                background: 'transparent', color: colors.text, fontSize: '12px', cursor: 'pointer',
-              }}>Back</button>
               <button onClick={runComplianceCheck} style={{
                 padding: '8px 20px', borderRadius: '6px', border: 'none',
                 background: colors.accent, color: 'white',
                 fontSize: '12px', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px',
               }}>
-                <VerifiedUserIcon style={{ fontSize: 14 }} /> Run Compliance Check
+                <VerifiedUserIcon style={{ fontSize: 14 }} /> Run Compliance Screening
               </button>
             </div>
           </div>
