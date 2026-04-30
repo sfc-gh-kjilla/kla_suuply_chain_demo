@@ -88,6 +88,7 @@ function App() {
   const [activeBottomTab, setActiveBottomTab] = useState<'caseDetail' | 'sensorHealth' | 'telemetry' | 'maintenance' | 'shipping' | 'transfer' | 'inventory' | 'optimize' | 'multiSource' | 'compliance' | 'aiSearch' | 'resolve'>('caseDetail');
   const [chatPrompt, setChatPrompt] = useState<string | undefined>(undefined);
   const [chatCollapsed, setChatCollapsed] = useState(true);
+  const [injectChatTrigger, setInjectChatTrigger] = useState<{ question: string; answer: string; nonce: number } | undefined>(undefined);
   const [selectedCase, setSelectedCase] = useState<EscalationCase | null>(null);
   const [showSAPPanel, setShowSAPPanel] = useState(false);
   const [showArchitectureOverlay, setShowArchitectureOverlay] = useState(false);
@@ -151,6 +152,11 @@ function App() {
   const triggerChatPrompt = (prompt: string) => {
     setChatCollapsed(false);
     setChatPrompt(`${prompt} [${Date.now()}]`);
+  };
+
+  const triggerChatInject = (question: string, answer: string) => {
+    setChatCollapsed(false);
+    setInjectChatTrigger({ question, answer, nonce: Date.now() });
   };
 
   const handleCaseClick = (caseItem: EscalationCase) => {
@@ -782,6 +788,7 @@ function App() {
                 {activeBottomTab === 'compliance' && (
                   <TradeCompliancePanel
                     onAskAI={triggerChatPrompt}
+                    onInjectExportTerms={triggerChatInject}
                     onProceedToCost={() => setActiveBottomTab('shipping')}
                     selectedCase={selectedCase}
                     prefillPartId={compliancePrefill?.partId}
@@ -965,7 +972,7 @@ function App() {
           display: chatCollapsed ? 'none' : 'flex',
           flexDirection: 'column',
         }}>
-          <ChatPanel initialMessage={chatPrompt} />
+          <ChatPanel initialMessage={chatPrompt} injectTrigger={injectChatTrigger} />
         </div>
       </div>
 

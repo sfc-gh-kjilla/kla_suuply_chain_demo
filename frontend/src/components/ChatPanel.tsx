@@ -7,10 +7,11 @@ import PersonIcon from '@mui/icons-material/Person';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
-import type { ToolStep } from '../types';
+import type { ChatMessage, ToolStep } from '../types';
 
 interface ChatPanelProps {
   initialMessage?: string;
+  injectTrigger?: { question: string; answer: string; nonce: number };
 }
 
 const ToolStepIndicator: React.FC<{ steps: ToolStep[]; colors: Record<string, string>; theme: string }> = ({ steps, colors }) => {
@@ -82,12 +83,13 @@ const ToolStepIndicator: React.FC<{ steps: ToolStep[]; colors: Record<string, st
   );
 };
 
-export const ChatPanel: React.FC<ChatPanelProps> = ({ initialMessage }) => {
+export const ChatPanel: React.FC<ChatPanelProps> = ({ initialMessage, injectTrigger }) => {
   const { theme, colors } = useTheme();
-  const { messages, isLoading, activeToolSteps, error, sendMessage, clearMessages } = useAgentChat();
+  const { messages, isLoading, activeToolSteps, error, sendMessage, clearMessages, injectMessages } = useAgentChat();
   const [input, setInput] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastProcessedPrompt = useRef<string | null>(null);
+  const lastInjectedNonce = useRef<number | null>(null);
 
   useEffect(() => {
     if (initialMessage && initialMessage !== lastProcessedPrompt.current && !isLoading) {
@@ -95,6 +97,31 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ initialMessage }) => {
       sendMessage(initialMessage);
     }
   }, [initialMessage, sendMessage, isLoading]);
+
+  useEffect(() => {
+    if (!injectTrigger || injectTrigger.nonce === lastInjectedNonce.current) return;
+    lastInjectedNonce.current = injectTrigger.nonce;
+
+    const userMsg: ChatMessage = {
+      id: `user-inject-${Date.now()}`,
+      role: 'user',
+      content: injectTrigger.question,
+      timestamp: new Date(),
+    };
+    injectMessages([userMsg]);
+
+    const timer = setTimeout(() => {
+      const assistantMsg: ChatMessage = {
+        id: `assistant-inject-${Date.now()}`,
+        role: 'assistant',
+        content: injectTrigger.answer,
+        timestamp: new Date(),
+      };
+      injectMessages([assistantMsg]);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [injectTrigger, injectMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

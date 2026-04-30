@@ -9,6 +9,7 @@ interface UseAgentChatReturn {
   error: string | null;
   sendMessage: (content: string) => Promise<void>;
   clearMessages: () => void;
+  injectMessages: (msgs: ChatMessage[]) => void;
   isUsingRealAgent: boolean;
 }
 
@@ -916,5 +917,9 @@ Try asking:
     conversationHistoryRef.current = [];
   }, []);
 
-  return { messages, isLoading, activeToolSteps, error, sendMessage, clearMessages, isUsingRealAgent };
+  const injectMessages = useCallback((msgs: ChatMessage[]) => {
+    setMessages(prev => [...prev, ...msgs]);
+  }, []);
+
+  return { messages, isLoading, activeToolSteps, error, sendMessage, clearMessages, injectMessages, isUsingRealAgent };
 }

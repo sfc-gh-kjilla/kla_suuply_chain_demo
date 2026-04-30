@@ -73,6 +73,7 @@ const TARIFFS: Record<string, { rate: number; freight: number; fta?: string }> =
 
 interface TradeCompliancePanelProps {
   onAskAI?: (prompt: string) => void;
+  onInjectExportTerms?: (question: string, answer: string) => void;
   onProceedToCost?: () => void;
   prefillPartId?: string;
   prefillCustomer?: string;
@@ -80,7 +81,98 @@ interface TradeCompliancePanelProps {
   selectedCase?: EscalationCase | null;
 }
 
-export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, prefillCustomer, selectedCase }: TradeCompliancePanelProps) {
+const EXPORT_TERMS_ANSWER = `## US Export Control Reference Guide
+
+### Regulatory Frameworks
+
+**EAR — Export Administration Regulations**
+Administered by BIS (Bureau of Industry and Security). Controls dual-use goods, software, and technology. Most KLA semiconductor equipment falls under EAR.
+
+**ITAR — International Traffic in Arms Regulations**
+Administered by DDTC (Directorate of Defense Trade Controls). Controls defense articles and services. Stricter than EAR; requires license for most international transfers.
+
+**BIS — Bureau of Industry and Security**
+Department of Commerce agency that administers EAR and maintains the CCL (Commerce Control List) and Entity List.
+
+**OFAC — Office of Foreign Assets Control**
+Department of Treasury agency. Administers sanctions programs. Separate from export licensing — must check even for EAR-permissible items.
+
+---
+
+### Classification System
+
+**ECCN — Export Control Classification Number**
+Alphanumeric code (e.g., 3B001, 6A005) that classifies items on the Commerce Control List. Format: Category + Group + Paragraph (e.g., 3B001.f).
+
+**EAR99**
+Items subject to EAR but not listed on the CCL. Generally exportable without a license to most destinations. Cannot be exported to embargoed countries or denied parties.
+
+**CCL — Commerce Control List**
+Master list of controlled dual-use items. Organized into 10 categories (0–9) and 5 product groups (A–E).
+
+**USML — United States Munitions List**
+ITAR-controlled items. Maintained by State Department. Separate from CCL.
+
+---
+
+### Reasons for Control
+
+- **NS** — National Security
+- **AT** — Anti-Terrorism
+- **RS** — Regional Stability
+- **MT** — Missile Technology
+- **NP** — Nuclear Non-Proliferation
+- **CB** — Chemical & Biological Weapons
+- **SL** — Surreptitious Listening
+- **EI** — Encryption Items
+
+**License Exception**
+Pre-authorized exemption allowing export without an individual license. Common: ENC (encryption), STA (strategic trade authorization), TMP (temporary exports).
+
+---
+
+### Destination Tiers (EAR Country Groups)
+
+**Group A — Close Allies**
+Broadest license exception eligibility. Includes: Japan, South Korea, Belgium, Netherlands, Taiwan (de facto).
+
+**Group B — Standard Review**
+Most other countries. Standard EAR review applies.
+
+**Group D — Enhanced Controls**
+Countries of concern: China (D:1), Russia (D:1/D:2), India, Pakistan. FDP rules and expanded controls apply. Many items require individual license.
+
+**Group E — Embargoed / Prohibited**
+OFAC-sanctioned: Iran (E:1), North Korea (E:1), Cuba, Syria, Russia (post-2022 for certain items). Essentially no EAR license available.
+
+---
+
+### Key Terms for KLA Equipment
+
+**Deemed Export**
+Release of controlled technology to a foreign national in the US. Treated as an export to their home country. Relevant for engineering access to technical data.
+
+**FDP Rule — Foreign Direct Product Rule**
+Controls non-US made items if produced using certain US-origin technology or on US-origin equipment. Critical for KLA customers re-exporting products made on KLA tools.
+
+**End-Use / End-User Controls**
+Even with a valid ECCN and license exception, must verify: (1) Entity List (BIS), (2) Denied Persons List (BIS), (3) SDN List (OFAC). All checks required before any shipment.
+
+**Validated End-User (VEU)**
+Program allowing pre-approved exports to specific end-users in China or India without individual licenses.
+
+---
+
+### Common ECCN Categories for KLA Parts
+
+| ECCN | Category | Typical Control Reasons |
+|------|----------|------------------------|
+| 3B001 | Semiconductor manufacturing equip. | NS, AT (RS for advanced nodes) |
+| 6A005 | Lasers | NS, AT |
+| 3B002 | Test equipment for semiconductor | NS, AT |
+| 3E001 | Technology for 3B items | NS, AT |`;
+
+export function TradeCompliancePanel({ onAskAI, onInjectExportTerms, onProceedToCost, prefillPartId, prefillCustomer, selectedCase }: TradeCompliancePanelProps) {
   const { colors } = useTheme();
   const [currentStep, setCurrentStep] = useState<WorkflowStep>('part');
   const [selectedPartIdx, setSelectedPartIdx] = useState(0);
@@ -243,19 +335,8 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
                   Next: Export Control <ArrowForwardIcon style={{ fontSize: 14 }} />
                 </button>
               </div>
-              {onAskAI && (
-                <button onClick={() => onAskAI(
-                  `Explain US export control terminology for semiconductor manufacturing equipment. ` +
-                  `Cover the following and define each in plain language:\n\n` +
-                  `Regulatory frameworks: EAR, ITAR, BIS, OFAC.\n` +
-                  `ECCN classification codes and how to read them.\n` +
-                  `Reasons for control: NS1, NS2, AT1, RS.\n` +
-                  `License types and exceptions: NLR, STA, License Required, No License Available.\n` +
-                  `Destination country tiers: Group A Tier 1, Enhanced Controls, Prohibited Embargo.\n` +
-                  `Screening lists: US Entity List, OFAC SDN List, Comprehensive Sanctions.\n` +
-                  `Entity status levels: DENIED vs RESTRICTED.\n\n` +
-                  `Format the response as a structured reference guide.`
-                )} style={{
+              {onInjectExportTerms && (
+                <button onClick={() => onInjectExportTerms('Explain export control terms', EXPORT_TERMS_ANSWER)} style={{
                   padding: '7px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}40`,
                   background: colors.accent + '10', color: colors.accent, fontSize: '11px', fontWeight: 600,
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', width: 'fit-content',
