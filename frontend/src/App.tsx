@@ -76,7 +76,10 @@ function App() {
   const [_alerts, setAlerts] = useState<Alert[]>([]);
   const [telemetry, setTelemetry] = useState<TelemetryReading[]>([]);
   const [maintenanceLogs, setMaintenanceLogs] = useState<MaintenanceLog[]>([]);
-  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>([]);
+  const [shippingOptions, setShippingOptions] = useState<ShippingOption[]>(() => {
+    const defaultScanner = mockScanners.find(s => s.STATUS === 'CRITICAL') || mockScanners[0];
+    return defaultScanner ? getShippingOptions(defaultScanner.FAB_COUNTRY) : [];
+  });
   const [selectedScanner, setSelectedScanner] = useState<string | null>(
     mockScanners.find(s => s.STATUS === 'CRITICAL')?.SCANNER_ID || mockScanners[0]?.SCANNER_ID || null
   );
@@ -106,6 +109,14 @@ function App() {
     setConfirmedShipment(null);
     setCaseResolved(false);
   }, [selectedCase?.CASE_ID]);
+
+  // Keep shipping options in sync with the active scanner
+  useEffect(() => {
+    if (selectedScanner) {
+      const scanner = mockScanners.find(s => s.SCANNER_ID === selectedScanner);
+      if (scanner) setShippingOptions(getShippingOptions(scanner.FAB_COUNTRY));
+    }
+  }, [selectedScanner]);
 
   const workflowStep = useMemo(() => {
     if (caseResolved || activeBottomTab === 'resolve') return 'resolve';
@@ -146,10 +157,6 @@ function App() {
     setSelectedCase(caseItem);
     setSelectedScanner(caseItem.SCANNER_ID);
     setActiveBottomTab('caseDetail');
-    const scanner = mockScanners.find(s => s.SCANNER_ID === caseItem.SCANNER_ID);
-    if (scanner) {
-      setShippingOptions(getShippingOptions(scanner.FAB_COUNTRY));
-    }
   };
 
   const handleMetricClick = (metricName: string, scannerId: string) => {
