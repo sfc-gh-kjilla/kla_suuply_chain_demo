@@ -656,40 +656,23 @@ export function TradeCompliancePanel({ onAskAI, onInjectExportTerms, onProceedTo
 
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
               <button
-                onClick={() => setShowBlockedModal(false)}
+                onClick={() => {
+                  setShowBlockedModal(false);
+                  setCurrentStep('part');
+                }}
                 style={{
-                  padding: '10px 24px',
+                  padding: '10px 32px',
                   borderRadius: '8px',
-                  border: `1px solid ${colors.border}`,
-                  background: 'transparent',
-                  color: colors.text,
+                  border: 'none',
+                  background: colors.accent,
+                  color: 'white',
                   fontSize: '13px',
                   fontWeight: 600,
                   cursor: 'pointer',
                 }}
               >
-                Dismiss
+                OK
               </button>
-              {onAskAI && (
-                <button
-                  onClick={() => {
-                    setShowBlockedModal(false);
-                    onAskAI(`EXPORT BLOCKED: ${part.id} (${part.category}) to ${cust.name} (${cust.country}). Entity: ${complianceResult.entityDetail?.list || 'N/A'}. Region: ${complianceResult.regionDetail?.list || 'N/A'}. What are the legal implications and alternative options?`);
-                  }}
-                  style={{
-                    padding: '10px 24px',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: colors.accent,
-                    color: 'white',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Ask AI for Alternatives
-                </button>
-              )}
             </div>
           </div>
         </div>
