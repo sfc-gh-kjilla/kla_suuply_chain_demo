@@ -434,6 +434,10 @@ export function TradeCompliancePanel({ onAskAI, onProceedToCost, prefillPartId, 
             )}
 
             <div style={{ display: 'flex', gap: '8px' }}>
+              <button onClick={() => setCurrentStep('exportControl')} style={{
+                padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.border}`,
+                background: 'transparent', color: colors.text, fontSize: '12px', cursor: 'pointer',
+              }}>Back</button>
               <button onClick={reset} style={{
                 padding: '8px 20px', borderRadius: '6px', border: `1px solid ${colors.border}`,
                 background: 'transparent', color: colors.text, fontSize: '12px', fontWeight: 600, cursor: 'pointer',
