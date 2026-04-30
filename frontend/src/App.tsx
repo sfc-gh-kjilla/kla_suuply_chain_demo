@@ -246,8 +246,8 @@ function App() {
     },
     {
       tabs: [
-        { id: 'transfer', label: 'Transfer', icon: <SwapHorizIcon style={{ fontSize: 14 }} /> },
         { id: 'inventory', label: 'Inventory', icon: <LocalShippingIcon style={{ fontSize: 14 }} /> },
+        { id: 'transfer', label: 'Transfer', icon: <SwapHorizIcon style={{ fontSize: 14 }} /> },
       ],
     },
     {
